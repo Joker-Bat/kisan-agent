@@ -1,0 +1,41 @@
+{
+  "schemes": [
+    {
+      "id": "pm_kisan",
+      "name": "PM-Kisan",
+      "type": "income_support",
+      "benefit": "₹6,000/year",
+      "eligibility": {
+        "land_ownership": "required",
+        "exclusions": ["income_tax_payer", "government_employee"]
+      }
+    },
+    {
+      "id": "pmfby",
+      "name": "PMFBY",
+      "type": "crop_insurance",
+      "benefit": "Crop loss compensation",
+      "eligibility": {
+        "reporting_window_hours": 72
+      }
+    },
+    {
+      "id": "kcc",
+      "name": "Kisan Credit Card (KCC)",
+      "type": "loan",
+      "benefit": "Up to ₹2 lakh collateral-free at 4% interest",
+      "eligibility": {
+        "land_ownership": "required"
+      }
+    },
+    {
+      "id": "sdrf",
+      "name": "SDRF/NDRF",
+      "type": "disaster_compensation",
+      "benefit": "Up to ₹17,000/hectare for crop loss up to 2 hectares",
+      "eligibility": {
+        "prior_insurance_needed": false
+      }
+    }
+  ]
+}
