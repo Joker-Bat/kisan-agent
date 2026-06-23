@@ -22,11 +22,11 @@ from google.adk.models import Gemini
 from google.genai import types
 
 import os
-import google.auth
+from dotenv import load_dotenv
 
-_, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+load_dotenv()
+
+# ADK and google.genai will automatically pick up GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION from the environment
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 
