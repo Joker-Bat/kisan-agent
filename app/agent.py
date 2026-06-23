@@ -1,79 +1,87 @@
-# ruff: noqa
-# Copyright 2026 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-import datetime
-from zoneinfo import ZoneInfo
-
-from google.adk.agents import Agent
-from google.adk.apps import App
-from google.adk.models import Gemini
-from google.genai import types
-
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+from google.adk.apps import App
+from google.adk.agents import Agent
+from google.adk.models import Gemini
+from google.genai import types
 
-# ADK and google.genai will automatically pick up GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION from the environment
+from app.core.schemas import GraphState
+from app.core.constants import ORCHESTRATOR_INSTRUCTION, SYNTHESIS_INSTRUCTION
+from app.agents.weather_agent import run_weather_agent
+from app.agents.market_agent import run_market_agent
+from app.agents.crop_agent import run_crop_agent
+from app.agents.scheme_agent import run_scheme_agent
+
+load_dotenv()
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
+class KisanAgentRunner:
+    def __init__(self):
+        self.orchestrator = Agent(
+            name="orchestrator",
+            model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+            instruction=ORCHESTRATOR_INSTRUCTION,
+            output_type=GraphState
+        )
+        self.synthesizer = Agent(
+            name="synthesis_agent",
+            model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+            instruction=SYNTHESIS_INSTRUCTION,
+        )
 
-def get_weather(query: str) -> str:
-    """Simulates a web search. Use it get information on weather.
+    def __call__(self, query: str) -> str:
+        print(f"[Orchestrator] Analyzing query: '{query}'")
+        
+        # Step 1: Orchestrator analyzes intent and extracts parameters
+        initial_prompt = f"User Query: {query}"
+        
+        try:
+            state: GraphState = self.orchestrator(initial_prompt)
+        except Exception as e:
+            return f"Sorry, I encountered an error analyzing your request: {str(e)}"
+            
+        print(f"[Orchestrator] Extracted Profile: {state.profile}")
+        print(f"[Orchestrator] Active Agents: {state.active_agents}")
+        
+        # Optional: Ask follow-up questions if critical parameters for the requested agent are missing
+        if state.missing_info_questions:
+            print("[Orchestrator] Missing information, asking user...")
+            return " ".join(state.missing_info_questions)
+            
+        # Step 2: Dynamic Routing (Fan-Out)
+        if not state.active_agents:
+            return "I am the Kisan Agent. How can I assist you with your farming needs today?"
+            
+        if "weather_agent" in state.active_agents:
+            print("[Running] Weather Agent...")
+            state.weather_info = run_weather_agent(state.profile)
+            
+        if "market_agent" in state.active_agents:
+            print("[Running] Market Agent...")
+            state.market_info = run_market_agent(state.profile)
+            
+        if "crop_agent" in state.active_agents:
+            print("[Running] Crop Agent...")
+            state.crop_info = run_crop_agent(state.profile, state.weather_info)
+            
+        if "scheme_agent" in state.active_agents:
+            print("[Running] Scheme Agent...")
+            state.scheme_info = run_scheme_agent(state.profile)
+            
+        # Step 3: Synthesis (Fan-In)
+        print("[Running] Synthesis Agent...")
+        synthesis_prompt = f"User Query: {query}\nPopulated State: {state.model_dump_json()}"
+        
+        try:
+            final_response = self.synthesizer(synthesis_prompt)
+            return final_response
+        except Exception as e:
+            return f"Sorry, I gathered the data but encountered an error synthesizing the response: {str(e)}"
 
-    Args:
-        query: A string containing the location to get weather information for.
-
-    Returns:
-        A string with the simulated weather information for the queried location.
-    """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        return "It's 60 degrees and foggy."
-    return "It's 90 degrees and sunny."
-
-
-def get_current_time(query: str) -> str:
-    """Simulates getting the current time for a city.
-
-    Args:
-        city: The name of the city to get the current time for.
-
-    Returns:
-        A string with the current time information.
-    """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        tz_identifier = "America/Los_Angeles"
-    else:
-        return f"Sorry, I don't have timezone information for query: {query}."
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
-
-
-root_agent = Agent(
-    name="root_agent",
-    model=Gemini(
-        model="gemini-flash-latest",
-        retry_options=types.HttpRetryOptions(attempts=3),
-    ),
-    instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-    tools=[get_weather, get_current_time],
-)
-
+# Instantiate the runner and bind to the ADK App
+root_agent = KisanAgentRunner()
 app = App(
     root_agent=root_agent,
-    name="app",
+    name="kisan-app"
 )
