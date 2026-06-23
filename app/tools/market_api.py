@@ -1,0 +1,41 @@
+import httpx
+from app.core.config import settings
+from app.core.constants import DATA_GOV_IN_URL
+
+def fetch_mandi_prices(crop: str, state: str) -> dict:
+    """Fetches wholesale mandi prices from data.gov.in AGMARKNET API.
+    If the API key is not configured, returns mock data for testing.
+    
+    Args:
+        crop: The name of the crop (e.g., 'Tomato').
+        state: The Indian state (e.g., 'Tamil Nadu').
+        
+    Returns:
+        A dictionary containing price data.
+    """
+    if not settings.DATA_GOV_IN_API_KEY:
+        # Fallback Mock Data
+        return {
+            "status": "mock",
+            "records": [
+                {"state": state, "district": "Salem", "market": "Attur", "commodity": crop, "min_price": "1200", "max_price": "1500", "modal_price": "1350", "arrival_date": "Today"},
+                {"state": state, "district": "Coimbatore", "market": "Mettupalayam", "commodity": crop, "min_price": "1300", "max_price": "1600", "modal_price": "1450", "arrival_date": "Today"}
+            ]
+        }
+
+    params = {
+        "api-key": settings.DATA_GOV_IN_API_KEY,
+        "format": "json",
+        "filters[State]": state,
+        "filters[Commodity]": crop,
+        "limit": 10
+    }
+    
+    try:
+        response = httpx.get(DATA_GOV_IN_URL, params=params, timeout=10.0)
+        response.raise_for_status()
+        data = response.json()
+        return {"status": "success", "records": data.get("records", [])}
+    except Exception as e:
+        print(f"Market API error: {e}")
+        return {"status": "error", "message": str(e), "records": []}
