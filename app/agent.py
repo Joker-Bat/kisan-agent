@@ -33,5 +33,5 @@ root_agent = Workflow(
 
 app = App(
     root_agent=root_agent,
-    name="kisan-app"
+    name="kisan_app"
 )
