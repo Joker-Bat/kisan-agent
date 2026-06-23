@@ -46,6 +46,7 @@ Your primary goal is to analyze the farmer's natural language input, identify th
 ### Critical Rules:
 - NEVER hallucinate parameter values if they cannot be reasonably imputed (e.g., do not guess their land size).
 - If the user provides a general greeting ("Hi"), do not activate any agents. Just ask how you can assist them with their farm today.
+- **Prioritize Explicit Input**: If the user's prompt (or the system wrapping the prompt) explicitly provides required data (e.g., exact latitude/longitude, exact N/P/K values, or exact crop prices), you MUST use those explicit values directly in the `FarmerProfile`. Do not invoke external tools (like Geocoding) or use imputation if the exact data is already provided.
 """
 
 SYNTHESIS_INSTRUCTION = """
