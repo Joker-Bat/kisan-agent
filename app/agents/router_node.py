@@ -1,55 +1,43 @@
 import asyncio
-from google.adk.workflow import node, Event
+from google.adk.workflow import node
+from google.adk.events.event import Event
 from google.adk.agents.context import Context
 
 from app.core.schemas import GraphState
 from app.core.constants import ROUTE_SYNTHESIS, ROUTE_DIRECT_RESPONSE
-from app.agents.weather_agent import run_weather_agent
-from app.agents.market_agent import run_market_agent
-from app.agents.crop_agent import run_crop_agent
-from app.agents.scheme_agent import run_scheme_agent
-
-# Wrappers for standalone agents so they can be dynamically scheduled
-async def weather_node(node_input: GraphState):
-    return run_weather_agent(node_input.profile)
-
-async def market_node(node_input: GraphState):
-    return run_market_agent(node_input.profile)
-
-async def crop_node(node_input: GraphState):
-    return run_crop_agent(node_input.profile, None)
-
-async def scheme_node(node_input: GraphState):
-    return run_scheme_agent(node_input.profile)
+from app.agents.weather_agent import weather_node
+from app.agents.market_agent import market_node
+from app.agents.crop_agent import crop_node
+from app.agents.scheme_agent import scheme_node
 
 @node(rerun_on_resume=True)
-async def dynamic_router(ctx: Context, state: GraphState):
+async def dynamic_router(ctx: Context, node_input: GraphState):
     """Dynamically parallelizes and schedules sub-agents based on Orchestrator's routing."""
     
     # Short-circuit if missing info
-    if state.missing_info_questions:
-        return Event(output=" ".join(state.missing_info_questions), route=ROUTE_DIRECT_RESPONSE)
+    if node_input.missing_info_questions:
+        return Event(output=" ".join(node_input.missing_info_questions), route=ROUTE_DIRECT_RESPONSE)
         
-    if not state.active_agents:
+    if not node_input.active_agents:
         return Event(output="I am the Kisan Agent. How can I assist you with your farming needs today?", route=ROUTE_DIRECT_RESPONSE)
 
     tasks = []
     keys = []
     
-    if "weather_agent" in state.active_agents:
-        tasks.append(ctx.run_node(weather_node, node_input=state))
+    if "weather_agent" in node_input.active_agents:
+        tasks.append(ctx.run_node(weather_node, node_input=node_input))
         keys.append("weather")
         
-    if "market_agent" in state.active_agents:
-        tasks.append(ctx.run_node(market_node, node_input=state))
+    if "market_agent" in node_input.active_agents:
+        tasks.append(ctx.run_node(market_node, node_input=node_input))
         keys.append("market")
         
-    if "crop_agent" in state.active_agents:
-        tasks.append(ctx.run_node(crop_node, node_input=state))
+    if "crop_agent" in node_input.active_agents:
+        tasks.append(ctx.run_node(crop_node, node_input=node_input))
         keys.append("crop")
         
-    if "scheme_agent" in state.active_agents:
-        tasks.append(ctx.run_node(scheme_node, node_input=state))
+    if "scheme_agent" in node_input.active_agents:
+        tasks.append(ctx.run_node(scheme_node, node_input=node_input))
         keys.append("scheme")
         
     # Execute all dynamically scheduled agents concurrently

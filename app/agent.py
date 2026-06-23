@@ -14,11 +14,11 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Define the Graph Edges
 edges = [
-    (START, orchestrator),
+    ('START', orchestrator),
     (orchestrator, dynamic_router),
     
     # Route: synthesis
-    (dynamic_router, prepare_synthesis, ROUTE_SYNTHESIS),
+    (dynamic_router, {ROUTE_SYNTHESIS: prepare_synthesis}),
     (prepare_synthesis, synthesizer),
     
     # Route: direct_response is handled by default fall-through if no matching edge exists, 

@@ -1,8 +1,10 @@
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
 from google.genai import types
+from google.adk.workflow import node
+from google.adk.agents.context import Context
 
-from app.core.schemas import MarketOutput, FarmerProfile
+from app.core.schemas import MarketOutput, GraphState
 from app.tools.market_api import fetch_mandi_prices
 
 MARKET_AGENT_INSTRUCTION = """
@@ -12,12 +14,16 @@ Highlight the market with the highest modal price and explicitly tell the farmer
 Never make up prices. If the dataset is empty, advise the farmer that no recent price data is available for that crop in their state.
 """
 
-def get_market_model():
-    """Configurable model for the market agent."""
-    return Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3))
+market_summarizer = LlmAgent(
+    name="market_summarizer",
+    model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+    instruction=MARKET_AGENT_INSTRUCTION,
+    output_schema=MarketOutput
+)
 
-def run_market_agent(profile: FarmerProfile) -> MarketOutput:
-    """Executes the Market agent logic."""
+@node(rerun_on_resume=True)
+async def market_node(ctx: Context, node_input: GraphState):
+    profile = node_input.profile
     if not profile.crop_intent or not profile.state:
         return MarketOutput(
             crop=profile.crop_intent or "Unknown",
@@ -27,10 +33,4 @@ def run_market_agent(profile: FarmerProfile) -> MarketOutput:
         
     data = fetch_mandi_prices(profile.crop_intent, profile.state)
     
-    agent = Agent(
-        name="market_summarizer",
-        model=get_market_model(),
-        instruction=MARKET_AGENT_INSTRUCTION,
-        output_type=MarketOutput
-    )
-    return agent(f"Crop: {profile.crop_intent}\nState: {profile.state}\nData: {data}")
+    return await ctx.run_node(market_summarizer, node_input=f"Crop: {profile.crop_intent}\nState: {profile.state}\nData: {data}")

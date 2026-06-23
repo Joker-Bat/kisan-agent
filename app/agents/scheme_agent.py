@@ -1,10 +1,12 @@
 import json
 import os
-from google.adk.agents import Agent
+from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
 from google.genai import types
+from google.adk.workflow import node
+from google.adk.agents.context import Context
 
-from app.core.schemas import SchemeOutput, FarmerProfile
+from app.core.schemas import SchemeOutput, GraphState
 from app.core.config import settings
 
 SCHEME_AGENT_INSTRUCTION = """
@@ -15,22 +17,20 @@ Only recommend schemes the farmer is ACTUALLY eligible for.
 Provide clear, step-by-step application instructions for the matching schemes. Do not hallucinate URLs or schemes outside the provided database.
 """
 
-def get_scheme_model():
-    """Configurable model for the scheme agent."""
-    return Gemini(model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3))
+scheme_evaluator = LlmAgent(
+    name="scheme_evaluator",
+    model=Gemini(model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3)),
+    instruction=SCHEME_AGENT_INSTRUCTION,
+    output_schema=SchemeOutput
+)
 
-def run_scheme_agent(profile: FarmerProfile) -> SchemeOutput:
-    """Executes the Scheme agent logic."""
+@node(rerun_on_resume=True)
+async def scheme_node(ctx: Context, node_input: GraphState):
+    profile = node_input.profile
     region_file = f"{settings.REGION}.json"
     scheme_path = os.path.join(os.path.dirname(__file__), "..", "data", "schemes", region_file)
     with open(scheme_path, "r", encoding="utf-8") as f:
         schemes_db = json.load(f)
         
-    agent = Agent(
-        name="scheme_evaluator",
-        model=get_scheme_model(),
-        instruction=SCHEME_AGENT_INSTRUCTION,
-        output_type=SchemeOutput
-    )
     prompt = f"Farmer Profile: {profile.model_dump_json()}\nSchemes DB: {json.dumps(schemes_db)}"
-    return agent(prompt)
+    return await ctx.run_node(scheme_evaluator, node_input=prompt)
