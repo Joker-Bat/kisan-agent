@@ -2,13 +2,17 @@
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 DATA_GOV_IN_URL = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
 
-# Graph Nodes
+# Graph Nodes & Routes
 NODE_ORCHESTRATOR = "orchestrator"
 NODE_WEATHER = "weather_agent"
 NODE_MARKET = "market_agent"
 NODE_CROP = "crop_agent"
 NODE_SCHEME = "scheme_agent"
 NODE_SYNTHESIS = "synthesis_agent"
+
+# Workflow Edges
+ROUTE_SYNTHESIS = "synthesis"
+ROUTE_DIRECT_RESPONSE = "direct_response"
 
 # Prompts
 ORCHESTRATOR_INSTRUCTION = """
