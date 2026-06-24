@@ -5,17 +5,19 @@ from google.adk.apps import App
 from google.adk.workflow import Workflow, START
 
 from app.core.constants import ROUTE_SYNTHESIS
-from app.agents.orchestrator_agent import orchestrator
-from app.agents.router_node import dynamic_router
+from app.agents.orchestrator_agent import orchestrator_node
 from app.agents.synthesis_agent import prepare_synthesis, synthesizer
+from app.agents.router_node import dynamic_router
+
+# Removed Monkeypatch
 
 load_dotenv()
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Define the Graph Edges
 edges = [
-    ('START', orchestrator),
-    (orchestrator, dynamic_router),
+    ('START', orchestrator_node),
+    (orchestrator_node, dynamic_router),
     
     # Route: synthesis
     (dynamic_router, {ROUTE_SYNTHESIS: prepare_synthesis}),
@@ -25,10 +27,13 @@ edges = [
     # ADK just outputs the event payload directly.
 ]
 
+from app.core.schemas import GraphState
+
 root_agent = Workflow(
     name="kisan_workflow",
     edges=edges,
-    description="A multi-agent graph workflow for Indian farmers."
+    description="A multi-agent graph workflow for Indian farmers.",
+    state_schema=GraphState
 )
 
 app = App(

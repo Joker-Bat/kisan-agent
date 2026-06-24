@@ -12,6 +12,9 @@ from app.agents.scheme_agent import scheme_node
 
 @node(rerun_on_resume=True)
 async def dynamic_router(ctx: Context, node_input: GraphState):
+    return await dynamic_router_logic(ctx, node_input)
+
+async def dynamic_router_logic(ctx: Context, node_input: GraphState):
     """Dynamically parallelizes and schedules sub-agents based on Orchestrator's routing."""
     
     # Short-circuit if missing info
