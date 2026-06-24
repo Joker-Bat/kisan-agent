@@ -2,87 +2,80 @@
   "schemes": [
     {
       "id": "pm_kisan",
-      "name": "Pradhan Mantri Kisan Samman Nidhi (PM-Kisan)",
+      "name": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
       "type": "income_support",
-      "benefit": "₹6,000 per year transferred directly to the bank account in 3 equal installments.",
+      "benefit": "₹6,000 per year, disbursed in three equal installments of ₹2,000 via Direct Benefit Transfer (DBT).",
       "eligibility": {
-        "land_ownership": "Must own cultivable land in their name.",
-        "exclusions": ["Institutional landholders", "Current/former Govt employees", "Income tax payers", "Professionals (Doctors, Engineers)"]
+        "target_group": "Small and marginal landholding farmer families",
+        "land_requirement": "Must own cultivable land in their name",
+        "exclusions": [
+          "Institutional landholders",
+          "Current/former Govt employees",
+          "Income tax payers",
+          "Professionals (Doctors, Engineers, Lawyers)"
+        ]
       },
-      "application_process": "Register via the PM-Kisan portal (pmkisan.gov.in) or at the nearest Common Service Centre (CSC) with Aadhaar and land records."
+      "application_process": "Register via the PM-Kisan portal (pmkisan.gov.in) or at the nearest Common Service Centre (CSC). Mandatory e-KYC and Aadhaar-seeded bank account required.",
+      "url": "https://pmkisan.gov.in/"
     },
     {
       "id": "pmfby",
       "name": "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
       "type": "crop_insurance",
-      "benefit": "Comprehensive insurance cover against failure of crops due to natural calamities, pests, or diseases.",
+      "benefit": "Comprehensive insurance cover against failure of crops due to natural calamities, pests, and disease outbreaks.",
       "eligibility": {
-        "crops_covered": "Food & oilseeds crops, annual commercial/horticultural crops.",
-        "premium": "2% for Kharif, 1.5% for Rabi, 5% for commercial/horticulture.",
-        "disaster_reporting_window_hours": 72
+        "target_group": "All farmers growing notified crops in notified areas",
+        "crops_covered": "Food & oilseeds crops, annual commercial/horticultural crops",
+        "additional_criteria": "Premium capped at 2% for Kharif, 1.5% for Rabi, and 5% for commercial/horticultural crops."
       },
-      "application_process": "Apply via banks, CSCs, or the PMFBY portal. In case of localized damage (heavy rain/flood), damage must be reported to the insurance company or agriculture department within 72 hours."
+      "application_process": "Apply via banks, CSCs, or the PMFBY portal. Localized damage must be reported within 72 hours via the Crop Insurance App or toll-free numbers.",
+      "url": "https://pmfby.gov.in/"
     },
     {
       "id": "kcc",
-      "name": "Kisan Credit Card (KCC)",
+      "name": "Kisan Credit Card (KCC) Scheme",
       "type": "loan",
-      "benefit": "Short term crop loans up to ₹3 lakh at a concessional interest rate of 4% (with prompt repayment subvention). Collateral-free loan up to ₹1.6 lakh.",
+      "benefit": "Flexible short-term credit for agricultural operations. Loans up to ₹3 lakh at a concessional interest rate of 7%, with a 3% subvention for timely repayment (effective rate 4%). Collateral-free loan up to ₹1.6 lakh.",
       "eligibility": {
-        "target_group": "All farmers (individuals/joint borrowers), tenant farmers, oral lessees, and sharecroppers."
+        "target_group": "All farmers, including tenant farmers, oral lessees, sharecroppers, and animal husbandry/fishery farmers."
       },
-      "application_process": "Submit application to a local commercial bank, RRB, or Cooperative bank along with land holding certificate and crop details."
+      "application_process": "Submit application to a local commercial bank, RRB, or Cooperative bank. Applications can also be initiated via the PM-KISAN portal for existing beneficiaries.",
+      "url": "https://sbi.co.in/web/agri-rural/agriculture-banking/crop-loan/kisan-credit-card"
     },
     {
-      "id": "sdrf",
-      "name": "State Disaster Response Fund (SDRF) / NDRF",
-      "type": "disaster_compensation",
-      "benefit": "Immediate relief for crop loss of 33% and above due to notified disasters (floods, cyclones, drought). Up to ₹17,000/hectare for rainfed areas (up to 2 hectares).",
+      "id": "aif",
+      "name": "Agriculture Infrastructure Fund (AIF)",
+      "type": "infrastructure_financing",
+      "benefit": "Interest subvention of 3% per annum and credit guarantee coverage under CGTMSE for loans up to ₹2 crore for post-harvest management projects.",
       "eligibility": {
-        "prior_insurance_needed": false,
-        "damage_threshold": "Crop loss must be >= 33%."
+        "target_group": "Farmers, FPOs, PACS, Marketing Cooperative Societies, Startups, and Agri-entrepreneurs.",
+        "additional_criteria": "Projects must relate to post-harvest management infrastructure or community farming assets."
       },
-      "application_process": "Village Administrative Officer (VAO) and Revenue Inspector will conduct a field survey (Girdawari). Submit loss details to the VAO immediately after the disaster."
+      "application_process": "Apply online via the National Agriculture Infra Financing Facility (NAIFF) portal (agriinfra.dac.gov.in).",
+      "url": "https://agriinfra.dac.gov.in/"
     },
     {
-      "id": "pm_kusum",
-      "name": "PM-KUSUM (Solar Pump Scheme)",
-      "type": "infrastructure_subsidy",
-      "benefit": "Up to 60% subsidy on the cost of standalone solar agriculture pumps.",
+      "id": "pmksy",
+      "name": "Pradhan Mantri Krishi Sinchayee Yojana (PMKSY) - Per Drop More Crop",
+      "type": "irrigation_subsidy",
+      "benefit": "Subsidy assistance for installing micro-irrigation systems (Drip and Sprinkler) to enhance water use efficiency.",
       "eligibility": {
-        "land_requirement": "Must have a water source and cultivable land."
+        "target_group": "All farmers, with higher subsidy percentages generally offered to small/marginal farmers and SC/ST farmers depending on state guidelines.",
+        "land_requirement": "Must have access to a water source and agricultural land."
       },
-      "application_process": "Apply through the State Nodal Agency (e.g., TEDA in Tamil Nadu) online portal."
+      "application_process": "Apply through the State Agriculture/Horticulture Department portals or approach the District Agriculture Officer.",
+      "url": "https://pmksy.gov.in/"
     },
     {
-      "id": "pkvy",
-      "name": "Paramparagat Krishi Vikas Yojana (PKVY)",
-      "type": "organic_farming_subsidy",
-      "benefit": "₹50,000 per hectare for 3 years to support organic farming inputs, certification, and marketing.",
+      "id": "namo_drone_didi",
+      "name": "Namo Drone Didi",
+      "type": "technology_subsidy",
+      "benefit": "Provides drones to Women Self Help Groups (SHGs) to rent to farmers for agricultural purposes (pesticide/fertilizer spraying), promoting tech adoption and female entrepreneurship.",
       "eligibility": {
-        "target_group": "Farmers must form a cluster of 20 hectares or 50 farmers to apply."
+        "target_group": "Women Self Help Groups (SHGs) recognized under DAY-NRLM."
       },
-      "application_process": "Approach the District Agriculture Officer to form an organic farming cluster."
-    },
-    {
-      "id": "smam",
-      "name": "Sub-Mission on Agricultural Mechanization (SMAM)",
-      "type": "equipment_subsidy",
-      "benefit": "Subsidy ranging from 40% to 80% for purchasing agricultural machinery like tractors, tillers, and harvesters.",
-      "eligibility": {
-        "target_group": "Small, marginal, and women farmers get higher subsidies."
-      },
-      "application_process": "Register on the Direct Benefit Transfer (DBT) portal of the Agriculture Department (agrimachinery.nic.in)."
-    },
-    {
-      "id": "uzhavar_sandhai",
-      "name": "Uzhavar Sandhai (Tamil Nadu Farmers Market)",
-      "type": "marketing_support",
-      "benefit": "Provides free stalls and weighing scales to farmers to sell fresh vegetables directly to consumers without middlemen.",
-      "eligibility": {
-        "target_group": "Must be a genuine farmer cultivating fruits/vegetables in Tamil Nadu."
-      },
-      "application_process": "Obtain an identity card from the Department of Agricultural Marketing and Agri Business, signed by the local Horticulture/Agriculture officer."
+      "application_process": "Implemented via State Nodal Agencies under the Ministry of Rural Development and DAY-NRLM. Approach local rural development offices for SHG enrollment.",
+      "url": "https://agricoop.nic.in/"
     }
   ]
 }

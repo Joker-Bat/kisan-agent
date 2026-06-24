@@ -6,7 +6,7 @@ from google.adk.agents.context import Context
 
 from app.core.schemas import WeatherOutput, GraphState
 from app.tools.geocoding import get_lat_lon
-from app.tools.weather_api import fetch_weather_forecast
+from app.providers.registry import active_weather_provider
 
 WEATHER_AGENT_INSTRUCTION = """
 You are the expert Agricultural Meteorologist for the Kisan Agent system.
@@ -39,7 +39,7 @@ async def weather_node(ctx: Context, node_input: GraphState):
             forecast_days=[]
         )
         
-    data = fetch_weather_forecast(lat, lon)
+    data = active_weather_provider.fetch_forecast(lat, lon)
     
     # Run the LLM agent as a child node for proper ADK tracing
     return await ctx.run_node(weather_summarizer, node_input=f"Raw data: {data}")

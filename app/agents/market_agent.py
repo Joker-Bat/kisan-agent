@@ -5,7 +5,7 @@ from google.adk.workflow import node
 from google.adk.agents.context import Context
 
 from app.core.schemas import MarketOutput, GraphState
-from app.tools.market_api import fetch_mandi_prices
+from app.providers.registry import active_market_provider
 
 MARKET_AGENT_INSTRUCTION = """
 You are the Market Economics Analyst for the Kisan Agent system.
@@ -31,6 +31,6 @@ async def market_node(ctx: Context, node_input: GraphState):
             prices=[]
         )
         
-    data = fetch_mandi_prices(profile.crop_intent, profile.state)
+    data = active_market_provider.fetch_prices(profile.crop_intent, profile.state)
     
     return await ctx.run_node(market_summarizer, node_input=f"Crop: {profile.crop_intent}\nState: {profile.state}\nData: {data}")

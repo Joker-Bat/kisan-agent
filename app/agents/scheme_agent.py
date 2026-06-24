@@ -1,5 +1,3 @@
-import json
-import os
 from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
 from google.genai import types
@@ -8,6 +6,7 @@ from google.adk.agents.context import Context
 
 from app.core.schemas import SchemeOutput, GraphState
 from app.core.config import settings
+from app.providers.registry import active_scheme_provider
 
 SCHEME_AGENT_INSTRUCTION = """
 You are the Government Scheme Advisor for the Kisan Agent system.
@@ -27,10 +26,11 @@ scheme_evaluator = LlmAgent(
 @node(rerun_on_resume=True)
 async def scheme_node(ctx: Context, node_input: GraphState):
     profile = node_input.profile
-    region_file = f"{settings.REGION}.json"
-    scheme_path = os.path.join(os.path.dirname(__file__), "..", "data", "schemes", region_file)
-    with open(scheme_path, "r", encoding="utf-8") as f:
-        schemes_db = json.load(f)
-        
-    prompt = f"Farmer Profile: {profile.model_dump_json()}\nSchemes DB: {json.dumps(schemes_db)}"
+    schemes_db = active_scheme_provider.get_schemes(settings.REGION)
+    
+    # Convert Pydantic models back to dict for the prompt
+    schemes_json = [scheme.model_dump(exclude_none=True) for scheme in schemes_db]
+    
+    import json
+    prompt = f"Farmer Profile: {profile.model_dump_json(exclude_none=True)}\nSchemes DB: {json.dumps(schemes_json, indent=2)}"
     return await ctx.run_node(scheme_evaluator, node_input=prompt)

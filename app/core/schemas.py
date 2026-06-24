@@ -1,5 +1,22 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
+
+class SchemeEligibility(BaseModel):
+    target_group: Optional[str] = None
+    land_requirement: Optional[str] = None
+    crops_covered: Optional[str] = None
+    income_criteria: Optional[str] = None
+    exclusions: Optional[List[str]] = None
+    additional_criteria: Optional[str] = None
+
+class SchemeModel(BaseModel):
+    id: str
+    name: str
+    type: str
+    benefit: str
+    eligibility: SchemeEligibility
+    application_process: str
+    url: Optional[str] = None
 
 class FarmerProfile(BaseModel):
     location_name: Optional[str] = Field(default=None, description="The name of the village, city, or district provided by the farmer.")

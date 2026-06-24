@@ -19,10 +19,10 @@ async def dynamic_router_logic(ctx: Context, node_input: GraphState):
     
     # Short-circuit if missing info
     if node_input.missing_info_questions:
-        return Event(output=" ".join(node_input.missing_info_questions), route=ROUTE_DIRECT_RESPONSE)
+        return Event(output=" ".join(node_input.missing_info_questions), branch=ROUTE_DIRECT_RESPONSE)
         
     if not node_input.active_agents:
-        return Event(output="I am the Kisan Agent. How can I assist you with your farming needs today?", route=ROUTE_DIRECT_RESPONSE)
+        return Event(output="I am the Kisan Agent. How can I assist you with your farming needs today?", branch=ROUTE_DIRECT_RESPONSE)
 
     tasks = []
     keys = []
@@ -48,4 +48,4 @@ async def dynamic_router_logic(ctx: Context, node_input: GraphState):
     results = {k: out for k, out in zip(keys, outputs)}
     
     # We pass the combined results to the synthesis route
-    return Event(output=results, route=ROUTE_SYNTHESIS)
+    return Event(output=results, branch=ROUTE_SYNTHESIS)
