@@ -26,8 +26,15 @@ async def crop_node(ctx: Context, node_input: GraphState):
     profile = node_input.profile
     weather_info = node_input.weather_info
     
-    prompt = f"Profile: {profile.model_dump_json()}"
+    prompt = f"Profile: {profile.model_dump_json(exclude_none=True)}"
     if weather_info:
         prompt += f"\nWeather context: {weather_info.summary}"
         
-    return await ctx.run_node(crop_recommender, node_input=prompt)
+    try:
+        return await ctx.run_node(crop_recommender, node_input=prompt)
+    except Exception as e:
+        print(f"Crop LLM Error: {e}")
+        return CropOutput(
+            recommended_crops=["N/A"],
+            reasoning="I'm having trouble analyzing your soil data right now due to a technical issue."
+        )

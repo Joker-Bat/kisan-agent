@@ -41,5 +41,18 @@ async def weather_node(ctx: Context, node_input: GraphState):
         
     data = active_weather_provider.fetch_forecast(lat, lon)
     
-    # Run the LLM agent as a child node for proper ADK tracing
-    return await ctx.run_node(weather_summarizer, node_input=f"Raw data: {data}")
+    if not data:
+        return WeatherOutput(
+            summary="The weather service is temporarily unavailable. Please try again later.",
+            forecast_days=[]
+        )
+    
+    try:
+        # Run the LLM agent as a child node for proper ADK tracing
+        return await ctx.run_node(weather_summarizer, node_input=f"Raw data: {data}")
+    except Exception as e:
+        print(f"Weather LLM Error: {e}")
+        return WeatherOutput(
+            summary="I'm having trouble analyzing the weather data right now due to a technical issue.",
+            forecast_days=[]
+        )

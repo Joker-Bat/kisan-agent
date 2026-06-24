@@ -9,7 +9,7 @@ class OpenMeteoProvider(WeatherProvider):
         params = {
             "latitude": lat,
             "longitude": lon,
-            "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min,soil_temperature_0cm",
+            "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min",
             "forecast_days": 14,
             "timezone": "auto"
         }

@@ -35,7 +35,16 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     prompt = f"Accumulated Profile: {current_profile}\nNew User Query: {user_msg}\nUpdate the profile based on the latest input."
     
     # Run the LLM to extract new info from the current turn
-    new_state_dict = await ctx.run_node(orchestrator_llm, node_input=prompt)
+    try:
+        new_state_dict = await ctx.run_node(orchestrator_llm, node_input=prompt)
+    except Exception as e:
+        print(f"Orchestrator LLM Error: {e}")
+        from app.core.constants import ROUTE_DIRECT_RESPONSE
+        # Event is already imported at the top of the file
+        return Event(
+            output="I am currently experiencing technical difficulties and cannot process your request. Please try again later.",
+            route=ROUTE_DIRECT_RESPONSE
+        )
     new_state = GraphState(**new_state_dict)
     
     # Python deterministic merge for nested profile

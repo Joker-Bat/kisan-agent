@@ -6,7 +6,7 @@ from google.adk.workflow import Workflow, START
 
 from app.core.constants import ROUTE_SYNTHESIS
 from app.agents.orchestrator_agent import orchestrator_node
-from app.agents.synthesis_agent import prepare_synthesis, synthesizer
+from app.agents.synthesis_agent import synthesis_node
 from app.agents.router_node import dynamic_router
 
 # Removed Monkeypatch
@@ -20,8 +20,7 @@ edges = [
     (orchestrator_node, dynamic_router),
     
     # Route: synthesis
-    (dynamic_router, {ROUTE_SYNTHESIS: prepare_synthesis}),
-    (prepare_synthesis, synthesizer),
+    (dynamic_router, {ROUTE_SYNTHESIS: synthesis_node}),
     
     # Route: direct_response is handled by default fall-through if no matching edge exists, 
     # ADK just outputs the event payload directly.

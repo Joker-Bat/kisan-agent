@@ -1,14 +1,26 @@
 import pytest
-from app.agents.synthesis_agent import prepare_synthesis
+from app.agents.synthesis_agent import synthesis_node
+from app.core.schemas import FarmerProfile, GraphState
 
-def test_synthesis_formatter():
+class MockContext:
+    def __init__(self):
+        self.state = {"profile": {"location_name": "Madurai"}}
+
+    async def run_node(self, node, node_input=None, **kwargs):
+        return f"Mock synthesis for: {node_input}"
+
+@pytest.mark.asyncio
+async def test_synthesis_node_formatting():
     node_input = {
-        "weather_info": "Sunny",
-        "market_info": "Prices up"
+        "weather": "Heavy rain tomorrow.",
+        "market": "Tomatoes at ₹20/kg.",
+        "active_agents": ["weather", "market"]
     }
     
-    prompt = prepare_synthesis(node_input)
+    ctx = MockContext()
     
-    assert "Sunny" in prompt
-    assert "Prices up" in prompt
-    assert "Synthesize the following agricultural data into a bilingual advisory" in prompt
+    # Run the node's underlying function directly
+    prompt = await synthesis_node._func(ctx, node_input)
+    
+    assert "Mock synthesis for" in prompt
+    assert "Heavy rain" in prompt

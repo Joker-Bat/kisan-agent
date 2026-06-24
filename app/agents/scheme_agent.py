@@ -33,4 +33,11 @@ async def scheme_node(ctx: Context, node_input: GraphState):
     
     import json
     prompt = f"Farmer Profile: {profile.model_dump_json(exclude_none=True)}\nSchemes DB: {json.dumps(schemes_json, indent=2)}"
-    return await ctx.run_node(scheme_evaluator, node_input=prompt)
+    try:
+        return await ctx.run_node(scheme_evaluator, node_input=prompt)
+    except Exception as e:
+        print(f"Scheme LLM Error: {e}")
+        return SchemeOutput(
+            eligible_schemes=["N/A"],
+            instructions="I'm having trouble analyzing your eligibility right now due to a technical issue. Please try again later."
+        )

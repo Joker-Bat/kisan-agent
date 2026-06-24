@@ -19,7 +19,7 @@ async def test_router_forwards_to_active_agents():
     # Run the logic function directly
     event = await dynamic_router_logic(ctx, state)
     
-    assert event.branch == "synthesis"
+    assert event.actions.route == "synthesis"
     assert ctx.run_node.call_count == 2
     
 @pytest.mark.asyncio
@@ -32,7 +32,7 @@ async def test_router_returns_direct_response_when_missing_info():
     
     event = await dynamic_router_logic(ctx, state)
     
-    assert event.branch == "direct_response"
+    assert event.actions.route == "direct_response"
     assert "location" in event.output
 
 @pytest.mark.asyncio
@@ -45,4 +45,4 @@ async def test_router_returns_direct_response_when_no_active_agents():
     
     event = await dynamic_router_logic(ctx, state)
     
-    assert event.branch == "direct_response"
+    assert event.actions.route == "direct_response"

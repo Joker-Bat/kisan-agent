@@ -33,4 +33,21 @@ async def market_node(ctx: Context, node_input: GraphState):
         
     data = active_market_provider.fetch_prices(profile.crop_intent, profile.state)
     
-    return await ctx.run_node(market_summarizer, node_input=f"Crop: {profile.crop_intent}\nState: {profile.state}\nData: {data}")
+    if not data:
+        return MarketOutput(
+            crop=profile.crop_intent,
+            state=profile.state,
+            prices=[],
+            summary="Market data is temporarily unavailable for this crop and state. Please try again later."
+        )
+    
+    try:
+        return await ctx.run_node(market_summarizer, node_input=f"Crop: {profile.crop_intent}\nState: {profile.state}\nData: {data}")
+    except Exception as e:
+        print(f"Market LLM Error: {e}")
+        return MarketOutput(
+            crop=profile.crop_intent,
+            state=profile.state,
+            prices=[],
+            summary="I'm having trouble analyzing the market data right now due to a technical issue."
+        )
