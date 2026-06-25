@@ -22,6 +22,8 @@ async def synthesis_node(ctx: Context, node_input: dict):
     prompt = f"Farmer Profile:\n{profile_json}\n\nAgent Results:\n"
     
     for agent_name, agent_output in node_input.items():
+        if agent_output == "SKIPPED":
+            continue
         if agent_name not in ["profile", "active_agents", "missing_info_questions"]:
             prompt += f"--- {agent_name.upper()} ---\n{agent_output}\n\n"
             

@@ -16,13 +16,18 @@ Never make up prices. If the dataset is empty, advise the farmer that no recent 
 
 market_summarizer = LlmAgent(
     name="market_summarizer",
-    model=Gemini(model="gemma-4", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemini-3.1-flash-lite", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=MARKET_AGENT_INSTRUCTION,
     output_schema=MarketOutput
 )
 
+from app.core.constants import NODE_MARKET
+
 @node(rerun_on_resume=True)
 async def market_node(ctx: Context, node_input: GraphState):
+    if NODE_MARKET not in node_input.active_agents:
+        return "SKIPPED"
+        
     profile = node_input.profile
     if not profile.crop_intent or not profile.state:
         return MarketOutput(

@@ -21,8 +21,13 @@ crop_recommender = LlmAgent(
     output_schema=CropOutput
 )
 
+from app.core.constants import NODE_CROP
+
 @node(rerun_on_resume=True)
 async def crop_node(ctx: Context, node_input: GraphState):
+    if NODE_CROP not in node_input.active_agents:
+        return "SKIPPED"
+        
     profile = node_input.profile
     weather_info = node_input.weather_info
     

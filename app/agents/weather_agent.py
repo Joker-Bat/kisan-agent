@@ -17,13 +17,18 @@ Never hallucinate forecasts. If data is missing, clearly state that.
 
 weather_summarizer = LlmAgent(
     name="weather_summarizer",
-    model=Gemini(model="gemma-4", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemini-3.1-flash-lite", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=WEATHER_AGENT_INSTRUCTION,
     output_schema=WeatherOutput
 )
 
+from app.core.constants import NODE_WEATHER
+
 @node(rerun_on_resume=True)
 async def weather_node(ctx: Context, node_input: GraphState):
+    if NODE_WEATHER not in node_input.active_agents:
+        return "SKIPPED"
+        
     profile = node_input.profile
     lat, lon = profile.latitude, profile.longitude
     

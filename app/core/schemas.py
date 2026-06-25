@@ -19,6 +19,7 @@ class SchemeModel(BaseModel):
     url: Optional[str] = None
 
 class FarmerProfile(BaseModel):
+    preferred_language: str = Field(default="English", description="The preferred language of the user for all responses (e.g., 'English', 'Tamil', 'Tanglish').")
     location_name: Optional[str] = Field(default=None, description="The name of the village, city, or district provided by the farmer.")
     latitude: Optional[float] = Field(default=None, description="The geographical latitude of the farmer's location.")
     longitude: Optional[float] = Field(default=None, description="The geographical longitude of the farmer's location.")

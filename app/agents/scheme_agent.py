@@ -23,8 +23,13 @@ scheme_evaluator = LlmAgent(
     output_schema=SchemeOutput
 )
 
+from app.core.constants import NODE_SCHEME
+
 @node(rerun_on_resume=True)
 async def scheme_node(ctx: Context, node_input: GraphState):
+    if NODE_SCHEME not in node_input.active_agents:
+        return "SKIPPED"
+        
     profile = node_input.profile
     schemes_db = active_scheme_provider.get_schemes(settings.REGION)
     
