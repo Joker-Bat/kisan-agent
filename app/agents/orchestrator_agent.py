@@ -10,7 +10,7 @@ from typing import Any
 
 orchestrator_llm = LlmAgent(
     name="orchestrator",
-    model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemini-3.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=ORCHESTRATOR_INSTRUCTION,
     output_schema=GraphState
 )

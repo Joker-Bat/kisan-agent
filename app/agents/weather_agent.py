@@ -17,7 +17,7 @@ Never hallucinate forecasts. If data is missing, clearly state that.
 
 weather_summarizer = LlmAgent(
     name="weather_summarizer",
-    model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemma-4", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=WEATHER_AGENT_INSTRUCTION,
     output_schema=WeatherOutput
 )

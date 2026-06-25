@@ -6,7 +6,7 @@ from app.core.constants import SYNTHESIS_INSTRUCTION
 
 synthesizer = LlmAgent(
     name="synthesizer",
-    model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemini-3.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=SYNTHESIS_INSTRUCTION,
 )
 

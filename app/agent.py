@@ -2,9 +2,9 @@ import os
 from dotenv import load_dotenv
 
 from google.adk.apps import App
-from google.adk.workflow import Workflow, START
+from google.adk.workflow import Workflow, START, END
 
-from app.core.constants import ROUTE_SYNTHESIS
+from app.core.constants import ROUTE_SYNTHESIS, ROUTE_DIRECT_RESPONSE
 from app.agents.orchestrator_agent import orchestrator_node
 from app.agents.synthesis_agent import synthesis_node
 from app.agents.router_node import dynamic_router
@@ -19,11 +19,12 @@ edges = [
     ('START', orchestrator_node),
     (orchestrator_node, dynamic_router),
     
-    # Route: synthesis
-    (dynamic_router, {ROUTE_SYNTHESIS: synthesis_node}),
-    
-    # Route: direct_response is handled by default fall-through if no matching edge exists, 
-    # ADK just outputs the event payload directly.
+    # Conditional routing from dynamic_router
+    (dynamic_router, {
+        ROUTE_SYNTHESIS: synthesis_node,
+        ROUTE_DIRECT_RESPONSE: END,
+        "__default__": END
+    }),
 ]
 
 from app.core.schemas import GraphState

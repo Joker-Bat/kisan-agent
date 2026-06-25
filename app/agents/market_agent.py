@@ -16,7 +16,7 @@ Never make up prices. If the dataset is empty, advise the farmer that no recent 
 
 market_summarizer = LlmAgent(
     name="market_summarizer",
-    model=Gemini(model="gemini-2.5-flash", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(model="gemma-4", retry_options=types.HttpRetryOptions(attempts=3)),
     instruction=MARKET_AGENT_INSTRUCTION,
     output_schema=MarketOutput
 )
