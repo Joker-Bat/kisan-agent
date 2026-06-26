@@ -4,7 +4,7 @@ from app.core.schemas import SchemeModel
 
 
 class WeatherProvider(Protocol):
-    def fetch_forecast(
+    async def fetch_forecast(
         self,
         lat: float,
         lon: float,
@@ -16,7 +16,7 @@ class WeatherProvider(Protocol):
 
 
 class MarketProvider(Protocol):
-    def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
+    async def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
         """Fetch market prices for the given crop and state."""
         ...
 

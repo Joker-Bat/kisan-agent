@@ -77,9 +77,9 @@ async def test_market_node_multiple_crops(monkeypatch):
     # Mock the fetch_prices method of active_market_provider
     from app.providers.registry import active_market_provider
 
-    mock_fetch = MagicMock()
+    mock_fetch = AsyncMock()
 
-    def side_effect(crop, state):
+    async def side_effect(crop, state):
         if crop == "Cotton":
             return [
                 {

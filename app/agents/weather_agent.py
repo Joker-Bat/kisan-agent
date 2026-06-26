@@ -41,7 +41,7 @@ async def weather_node(ctx: Context, node_input: GraphState):
 
     if lat is None or lon is None:
         if profile.location_name:
-            coords = get_lat_lon(profile.location_name)
+            coords = await get_lat_lon(profile.location_name)
             if coords:
                 lat, lon = coords
 
@@ -51,7 +51,7 @@ async def weather_node(ctx: Context, node_input: GraphState):
             forecast_days=[],
         )
 
-    data = active_weather_provider.fetch_forecast(
+    data = await active_weather_provider.fetch_forecast(
         lat,
         lon,
         start_date=profile.weather_start_date,

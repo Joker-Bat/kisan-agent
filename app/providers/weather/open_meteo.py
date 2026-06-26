@@ -8,7 +8,7 @@ from app.providers.interfaces import WeatherProvider
 
 
 class OpenMeteoProvider(WeatherProvider):
-    def fetch_forecast(
+    async def fetch_forecast(
         self,
         lat: float,
         lon: float,
@@ -49,9 +49,10 @@ class OpenMeteoProvider(WeatherProvider):
             }
 
         try:
-            response = httpx.get(url, params=params, timeout=10.0)
-            response.raise_for_status()
-            return response.json()
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
         except Exception as e:
             print(f"Weather API error: {e}")
             return {}

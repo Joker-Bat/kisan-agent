@@ -76,13 +76,13 @@ async def market_node(ctx: Context, node_input: GraphState):
 
     all_prices = []
     for crop_name in crop_names:
-        data = active_market_provider.fetch_prices(crop_name, profile.state)
+        data = await active_market_provider.fetch_prices(crop_name, profile.state)
         if data:
             all_prices.extend(data)
 
     if not all_prices:
         # Fetch up to 30 recent records for the state to suggest active crops
-        state_records = active_market_provider.fetch_prices(
+        state_records = await active_market_provider.fetch_prices(
             crop="", state=profile.state
         )
         suggested_crops = []

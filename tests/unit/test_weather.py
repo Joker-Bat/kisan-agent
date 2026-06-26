@@ -41,7 +41,7 @@ async def test_weather_node_custom_range(monkeypatch):
 
     from app.providers.registry import active_weather_provider
 
-    mock_fetch = MagicMock()
+    mock_fetch = AsyncMock()
     mock_fetch.return_value = {
         "daily": {
             "time": ["2026-06-25", "2026-06-26", "2026-06-27"],
@@ -60,13 +60,20 @@ async def test_weather_node_custom_range(monkeypatch):
     assert len(res.forecast_days) == 1
 
 
-def test_open_meteo_provider_routing(monkeypatch):
+@pytest.mark.asyncio
+async def test_open_meteo_provider_routing(monkeypatch):
     provider = OpenMeteoProvider()
-    mock_get = MagicMock()
-    monkeypatch.setattr("httpx.get", mock_get)
+    mock_client = MagicMock()
+    mock_get = AsyncMock()
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {}
+    mock_get.return_value = mock_resp
+    mock_client.get = mock_get
+    mock_client.__aenter__.return_value = mock_client
+    monkeypatch.setattr("httpx.AsyncClient", MagicMock(return_value=mock_client))
 
     # 1. Test standard forecast (no dates)
-    provider.fetch_forecast(11.6643, 78.146)
+    await provider.fetch_forecast(11.6643, 78.146)
     mock_get.assert_called_once()
     args, kwargs = mock_get.call_args
     assert args[0] == "https://api.open-meteo.com/v1/forecast"
@@ -78,7 +85,7 @@ def test_open_meteo_provider_routing(monkeypatch):
     today = datetime.date.today()
     start_date = (today - datetime.timedelta(days=10)).isoformat()
     end_date = today.isoformat()
-    provider.fetch_forecast(11.6643, 78.146, start_date=start_date, end_date=end_date)
+    await provider.fetch_forecast(11.6643, 78.146, start_date=start_date, end_date=end_date)
     args, kwargs = mock_get.call_args
     assert args[0] == "https://api.open-meteo.com/v1/forecast"
     assert kwargs["params"]["start_date"] == start_date
@@ -89,7 +96,7 @@ def test_open_meteo_provider_routing(monkeypatch):
     # 3. Test older historical range (beyond 90 days)
     old_start_date = (today - datetime.timedelta(days=100)).isoformat()
     old_end_date = (today - datetime.timedelta(days=95)).isoformat()
-    provider.fetch_forecast(
+    await provider.fetch_forecast(
         11.6643, 78.146, start_date=old_start_date, end_date=old_end_date
     )
     args, kwargs = mock_get.call_args
