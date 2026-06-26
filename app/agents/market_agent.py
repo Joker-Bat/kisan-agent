@@ -1,11 +1,20 @@
+import logging
+import re
+from typing import Any
+
 from google.adk.agents import LlmAgent
 from google.adk.agents.context import Context
 from google.adk.models import Gemini
 from google.adk.workflow import node
 from google.genai import types
 
+from app.app_utils.log_config import bind_session_id
+from app.core.config import settings
+from app.core.constants import NODE_MARKET
 from app.core.schemas import GraphState, MarketOutput
 from app.providers.registry import active_market_provider
+
+logger = logging.getLogger(__name__)
 
 MARKET_AGENT_INSTRUCTION = """
 You are the Market Economics Analyst for the Kisan Agent system.
@@ -28,45 +37,42 @@ market_summarizer = LlmAgent(
     output_schema=MarketOutput,
 )
 
-from app.core.constants import NODE_MARKET
+
+def parse_crop_intent(crop_intent: str | list[str] | None) -> list[str]:
+    """Helper to parse and split crop intents from string or list format."""
+    if not crop_intent:
+        return []
+    raw_crops = crop_intent if isinstance(crop_intent, list) else [crop_intent]
+    crop_names = []
+    for crop in raw_crops:
+        if isinstance(crop, str):
+            splits = re.split(r"\band\b|&|,", crop)
+            for s in splits:
+                s_clean = s.strip()
+                if s_clean:
+                    crop_names.append(s_clean)
+    return crop_names
 
 
 @node(rerun_on_resume=True)
 async def market_node(ctx: Context, node_input: GraphState):
+    bind_session_id(ctx)
     if NODE_MARKET not in node_input.active_agents:
+        logger.info("Market Agent: SKIPPED (not active)")
         return "SKIPPED"
 
+    logger.info("Market Agent: Starting processing")
     profile = node_input.profile
 
-    # Build list of crops to query
-    crop_names = []
-    if isinstance(profile.crop_intent, list):
-        for crop in profile.crop_intent:
-            if isinstance(crop, str):
-                import re
-
-                splits = re.split(r"\band\b|&|,", crop)
-                for s in splits:
-                    s_clean = s.strip()
-                    if s_clean:
-                        crop_names.append(s_clean)
-    elif isinstance(profile.crop_intent, str):
-        import re
-
-        splits = re.split(r"\band\b|&|,", profile.crop_intent)
-        for s in splits:
-            s_clean = s.strip()
-            if s_clean:
-                crop_names.append(s_clean)
-
+    crop_names = parse_crop_intent(profile.crop_intent)
     crop_str = ", ".join(crop_names) if crop_names else "Unknown"
 
     if not crop_names or not profile.state:
+        logger.warning(f"Market Agent: Missing criteria. crop_names={crop_names}, state={profile.state}")
         return MarketOutput(crop=crop_str, state=profile.state or "Unknown", prices=[])
 
-    from app.core.config import settings
-
     if not settings.DATA_GOV_IN_API_KEY:
+        logger.warning("Market Agent: API key for data.gov.in missing")
         return MarketOutput(
             crop=crop_str,
             state=profile.state,
@@ -76,11 +82,13 @@ async def market_node(ctx: Context, node_input: GraphState):
 
     all_prices = []
     for crop_name in crop_names:
+        logger.info(f"Market Agent: Fetching prices for {crop_name} in {profile.state}")
         data = await active_market_provider.fetch_prices(crop_name, profile.state)
         if data:
             all_prices.extend(data)
 
     if not all_prices:
+        logger.info(f"Market Agent: No prices found for {crop_str} in {profile.state}. Fetching state suggestions.")
         # Fetch up to 30 recent records for the state to suggest active crops
         state_records = await active_market_provider.fetch_prices(
             crop="", state=profile.state
@@ -90,11 +98,11 @@ async def market_node(ctx: Context, node_input: GraphState):
             seen_crops = set()
             for r in state_records:
                 commodity_name = r.get("commodity")
-                if commodity_name and commodity_name not in seen_crops:
+                if commodity_name:
                     # Clean up names like "Black Gram(Urd Beans)(Whole)" for readability
                     clean_name = commodity_name.split("(")[0].strip()
-                    if clean_name not in seen_crops:
-                        seen_crops.add(commodity_name)
+                    if clean_name and clean_name not in seen_crops:
+                        seen_crops.add(clean_name)
                         suggested_crops.append(clean_name)
                         if len(suggested_crops) >= 5:
                             break
@@ -109,13 +117,14 @@ async def market_node(ctx: Context, node_input: GraphState):
             crop=crop_str, state=profile.state, prices=[], summary=summary_msg
         )
 
+    logger.info(f"Market Agent: Summarizing {len(all_prices)} price records")
     try:
         return await ctx.run_node(
             market_summarizer,
             node_input=f"Crop: {crop_str}\nState: {profile.state}\nData: {all_prices}",
         )
     except Exception as e:
-        print(f"Market LLM Error: {e}")
+        logger.error(f"Market LLM Error: {e}", exc_info=True)
         return MarketOutput(
             crop=crop_str,
             state=profile.state,

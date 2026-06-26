@@ -2,10 +2,7 @@
 name = "kisan-agent"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Your Name", email = "your@email.com"},
-]
-
+authors = [{ name = "Your Name", email = "your@email.com" }]
 
 
 dependencies = [
@@ -33,11 +30,7 @@ eval = [
     "google-adk[eval]>=2.0.0,<3.0.0",
     "google-cloud-aiplatform[evaluation]>=1.156.0",
 ]
-lint = [
-    "ruff>=0.4.6,<1.0.0",
-    "ty>=0.0.1a0",
-    "codespell>=2.2.0,<3.0.0",
-]
+lint = ["ruff>=0.4.6,<1.0.0", "ty>=0.0.1a0", "codespell>=2.2.0,<3.0.0"]
 
 [tool.ruff]
 line-length = 88
@@ -49,12 +42,17 @@ select = [
     "F",   # pyflakes
     "W",   # pycodestyle warnings
     "I",   # isort
-    "C",  # flake8-comprehensions
+    "C",   # flake8-comprehensions
     "B",   # flake8-bugbear
-    "UP", # pyupgrade
+    "UP",  # pyupgrade
     "RUF", # ruff specific rules
 ]
-ignore = ["E501", "C901", "B006", "E402"] # ignore line too long, too complex, late imports
+ignore = [
+    "E501",
+    "C901",
+    "B006",
+    "E402",
+] # ignore line too long, too complex, late imports
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "frontend"]
@@ -85,8 +83,6 @@ ignore-words-list = "rouge,didi"
 skip = "./locust_env/*,uv.lock,.venv,./frontend,**/package-lock.json"
 
 
-
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -97,6 +93,4 @@ pythonpath = "."
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.hatch.build.targets.wheel]
-packages = ["app","frontend"]
-
-
+packages = ["app", "frontend"]

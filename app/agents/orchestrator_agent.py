@@ -1,13 +1,19 @@
+import datetime
+import logging
 from typing import Any
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.context import Context
+from google.adk.events.event import Event, EventActions
 from google.adk.models import Gemini
 from google.adk.workflow import node
 from google.genai import types
 
-from app.core.constants import ORCHESTRATOR_INSTRUCTION
+from app.app_utils.log_config import bind_session_id
+from app.core.constants import ORCHESTRATOR_INSTRUCTION, ROUTE_DIRECT_RESPONSE
 from app.core.schemas import GraphState
+
+logger = logging.getLogger(__name__)
 
 orchestrator_llm = LlmAgent(
     name="orchestrator",
@@ -18,8 +24,6 @@ orchestrator_llm = LlmAgent(
     output_schema=GraphState,
 )
 
-from google.adk.events.event import Event, EventActions
-
 
 @node(rerun_on_resume=True)
 async def orchestrator_node(ctx: Context, node_input: Any):
@@ -27,6 +31,9 @@ async def orchestrator_node(ctx: Context, node_input: Any):
 
 
 async def orchestrator_logic(ctx: Context, node_input: Any):
+    bind_session_id(ctx)
+    logger.info("Starting orchestrator node logic")
+
     # Convert ADK State object to a standard python dictionary
     current_state_dict = (
         ctx.state.to_dict() if hasattr(ctx.state, "to_dict") else dict(ctx.state)
@@ -39,8 +46,6 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     else:
         user_msg = str(node_input)
 
-    import datetime
-
     today = datetime.date.today().isoformat()
     prompt = f"Today's Date: {today}\nAccumulated Profile: {current_profile}\nNew User Query: {user_msg}\nUpdate the profile based on the latest input."
 
@@ -48,10 +53,7 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     try:
         new_state_dict = await ctx.run_node(orchestrator_llm, node_input=prompt)
     except Exception as e:
-        print(f"Orchestrator LLM Error: {e}")
-        from app.core.constants import ROUTE_DIRECT_RESPONSE
-
-        # Event is already imported at the top of the file
+        logger.error(f"Orchestrator LLM Error: {e}", exc_info=True)
         return Event(
             output="I am currently experiencing technical difficulties and cannot process your request. Please try again later.",
             actions=EventActions(route=ROUTE_DIRECT_RESPONSE),
@@ -74,6 +76,8 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
         if new_state.final_advisory
         else current_state_dict.get("final_advisory")
     )
+
+    logger.info(f"Orchestrator active agents detected: {merged_active_agents}")
 
     # We construct the exact state delta to patch the global ADK memory
     state_delta = {

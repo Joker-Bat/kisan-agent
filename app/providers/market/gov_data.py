@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import httpx
@@ -6,11 +7,14 @@ from app.core.config import settings
 from app.core.constants import DATA_GOV_IN_URL
 from app.providers.interfaces import MarketProvider
 
+logger = logging.getLogger(__name__)
+
 
 class GovDataMarketProvider(MarketProvider):
     async def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
         """Fetches wholesale mandi prices from data.gov.in AGMARKNET API."""
         if not settings.DATA_GOV_IN_API_KEY:
+            logger.warning("fetch_prices called but DATA_GOV_IN_API_KEY is not set.")
             return []
 
         params = {
@@ -26,6 +30,7 @@ class GovDataMarketProvider(MarketProvider):
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
+        logger.info(f"Fetching market prices from {DATA_GOV_IN_URL} for crop={crop}, state={state}")
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
@@ -35,5 +40,5 @@ class GovDataMarketProvider(MarketProvider):
                 data = response.json()
                 return data.get("records", [])
         except Exception as e:
-            print(f"Market API error: {e}")
+            logger.error(f"Market API error: {e}", exc_info=True)
             return []

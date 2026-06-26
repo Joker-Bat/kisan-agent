@@ -1,8 +1,13 @@
+import logging
 import math
 import os
 from typing import Any
 
+import pandas as pd
+
 from app.providers.interfaces import CropProvider
+
+logger = logging.getLogger(__name__)
 
 
 class LocalCsvCropProvider(CropProvider):
@@ -23,12 +28,11 @@ class LocalCsvCropProvider(CropProvider):
         if self.stats:
             return
 
-        import pandas as pd
-
         if not os.path.exists(self.csv_path):
-            print(f"Warning: Crop recommendation dataset not found at {self.csv_path}")
+            logger.warning(f"Crop recommendation dataset not found at {self.csv_path}")
             return
 
+        logger.info(f"Loading crop recommendation dataset from {self.csv_path}")
         try:
             df = pd.read_csv(self.csv_path)
             features = ["N", "P", "K", "ph", "rainfall", "temperature"]
@@ -43,7 +47,7 @@ class LocalCsvCropProvider(CropProvider):
                         std_val = 1e-3
                     self.stats[crop][f] = {"mean": mean_val, "std": std_val}
         except Exception as e:
-            print(f"Error loading crop dataset stats: {e}")
+            logger.error(f"Error loading crop dataset stats: {e}", exc_info=True)
 
     def match_crops(
         self,
@@ -59,6 +63,7 @@ class LocalCsvCropProvider(CropProvider):
         self._load_data()
 
         if not self.stats:
+            logger.warning("No crop stats available for matching.")
             return []
 
         inputs = {
@@ -73,6 +78,7 @@ class LocalCsvCropProvider(CropProvider):
         # Filter out features that are None
         active_inputs = {f: val for f, val in inputs.items() if val is not None}
         if not active_inputs:
+            logger.info("match_crops called with no active soil/weather inputs.")
             return []
 
         scores = []

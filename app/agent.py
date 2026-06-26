@@ -12,8 +12,12 @@ from app.agents.router_node import dynamic_router
 from app.agents.scheme_agent import scheme_node
 from app.agents.synthesis_agent import synthesis_node
 from app.agents.weather_agent import weather_node
+from app.app_utils.log_config import setup_logging
+from app.core.schemas import GraphState
 
+setup_logging()
 load_dotenv()
+
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 join_node = JoinNode(name="merge_specialists")
@@ -35,8 +39,6 @@ edges = [
     # Pass the merged output to synthesis
     (join_node, synthesis_node),
 ]
-
-from app.core.schemas import GraphState
 
 root_agent = Workflow(
     name="kisan_workflow",

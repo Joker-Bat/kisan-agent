@@ -1,4 +1,5 @@
 import json
+import logging
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.context import Context
@@ -6,7 +7,12 @@ from google.adk.models import Gemini
 from google.adk.workflow import node
 from google.genai import types
 
+from app.app_utils.log_config import bind_session_id
+from app.core.constants import NODE_CROP
 from app.core.schemas import CropOutput, GraphState
+from app.providers.registry import active_crop_provider
+
+logger = logging.getLogger(__name__)
 
 CROP_AGENT_INSTRUCTION = """
 You are the Chief Agronomist for the Kisan Agent system.
@@ -25,14 +31,15 @@ crop_recommender = LlmAgent(
     output_schema=CropOutput,
 )
 
-from app.core.constants import NODE_CROP
-
 
 @node(rerun_on_resume=True)
 async def crop_node(ctx: Context, node_input: GraphState):
+    bind_session_id(ctx)
     if NODE_CROP not in node_input.active_agents:
+        logger.info("Crop Agent: SKIPPED (not active)")
         return "SKIPPED"
 
+    logger.info("Crop Agent: Starting processing")
     profile = node_input.profile
     weather_info = node_input.weather_info
 
@@ -47,11 +54,10 @@ async def crop_node(ctx: Context, node_input: GraphState):
                     temps.append((t_max + t_min) / 2.0)
             if temps:
                 avg_temp = sum(temps) / len(temps)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Crop Agent: Error calculating average temperature: {e}")
 
-    from app.providers.registry import active_crop_provider
-
+    logger.info(f"Crop Agent: Matching crops for N={profile.n_val}, P={profile.p_val}, K={profile.k_val}, pH={profile.ph_val}, avg_temp={avg_temp}")
     # Match crops using the local CSV provider based on soil parameters
     matches = active_crop_provider.match_crops(
         n=profile.n_val,
@@ -69,10 +75,11 @@ async def crop_node(ctx: Context, node_input: GraphState):
 
     prompt += "Identify the best crop recommendations from the Grounded Database Matches. Provide an agronomical rationale explaining why the recommended crops are the best match for the farmer's soil nutrients and pH values, referencing the compatibility scores."
 
+    logger.info("Crop Agent: Summarizing crop recommendations via LLM")
     try:
         return await ctx.run_node(crop_recommender, node_input=prompt)
     except Exception as e:
-        print(f"Crop LLM Error: {e}")
+        logger.error(f"Crop LLM Error: {e}", exc_info=True)
         return CropOutput(
             recommended_crops=["N/A"],
             rationale="I'm having trouble analyzing your soil data right now due to a technical issue.",

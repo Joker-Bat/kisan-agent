@@ -1,4 +1,7 @@
+import logging
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 async def get_lat_lon(location_name: str) -> tuple[float, float] | None:
@@ -17,6 +20,7 @@ async def get_lat_lon(location_name: str) -> tuple[float, float] | None:
     url = "https://nominatim.openstreetmap.org/search"
     params = {"q": location_name, "format": "json", "limit": 1, "countrycodes": "in"}
 
+    logger.info(f"Geocoding: Resolving '{location_name}' via Nominatim")
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(url, params=params, headers=headers)
@@ -25,7 +29,9 @@ async def get_lat_lon(location_name: str) -> tuple[float, float] | None:
             if data and len(data) > 0:
                 lat = float(data[0]["lat"])
                 lon = float(data[0]["lon"])
+                logger.info(f"Geocoding: Resolved '{location_name}' to lat={lat}, lon={lon}")
                 return (lat, lon)
+            logger.warning(f"Geocoding: No results found for '{location_name}'")
     except Exception as e:
-        print(f"Geocoding error: {e}")
+        logger.error(f"Geocoding error: {e}", exc_info=True)
     return None

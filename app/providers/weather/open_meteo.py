@@ -1,10 +1,13 @@
 import datetime
+import logging
 from typing import Any
 
 import httpx
 
 from app.core.constants import OPEN_METEO_URL
 from app.providers.interfaces import WeatherProvider
+
+logger = logging.getLogger(__name__)
 
 
 class OpenMeteoProvider(WeatherProvider):
@@ -27,7 +30,8 @@ class OpenMeteoProvider(WeatherProvider):
                     url = "https://archive-api.open-meteo.com/v1/archive"
                 else:
                     url = OPEN_METEO_URL
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Failed to parse dates, defaulting to forecast URL: {e}")
                 url = OPEN_METEO_URL
 
             params = {
@@ -48,11 +52,12 @@ class OpenMeteoProvider(WeatherProvider):
                 "timezone": "auto",
             }
 
+        logger.info(f"Fetching weather from {url} for lat={lat}, lon={lon}")
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(url, params=params)
                 response.raise_for_status()
                 return response.json()
         except Exception as e:
-            print(f"Weather API error: {e}")
+            logger.error(f"Weather API error: {e}", exc_info=True)
             return {}
