@@ -25,3 +25,17 @@ class SchemeProvider(Protocol):
     def get_schemes(self, region: str) -> list[SchemeModel]:
         """Get available schemes for the given region."""
         ...
+
+
+class CropProvider(Protocol):
+    def match_crops(
+        self,
+        n: float | None = None,
+        p: float | None = None,
+        k: float | None = None,
+        ph: float | None = None,
+        rainfall: float | None = None,
+        temperature: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """Find the top matching crops from the Kaggle dataset."""
+        ...
