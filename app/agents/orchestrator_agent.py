@@ -63,13 +63,6 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
         "missing_info_questions": new_state.missing_info_questions,
     }
     
-    # Directly update the ADK context state using its built-in method
-    if hasattr(ctx.state, "update"):
-        ctx.state.update(state_delta)
-    else:
-        for k, v in state_delta.items():
-            ctx.state[k] = v
-            
     # The output is the fully merged state passed downstream to the router.
     merged_full_state_dict = {
         "user_query": user_msg,
@@ -84,5 +77,6 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     }
     
     return Event(
-        output=GraphState(**merged_full_state_dict)
+        output=GraphState(**merged_full_state_dict),
+        state=state_delta
     )

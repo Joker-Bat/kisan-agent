@@ -48,10 +48,9 @@ async def test_orchestrator_extracts_and_routes():
     # Assert LLM was called
     ctx.run_node.assert_called_once()
     
-    # Assert that the native context state was updated natively (deep merged)
-    updated_state = ctx.state.to_dict()
-    assert updated_state["profile"]["location_name"] == "Salem"  # Retained old memory
-    assert updated_state["profile"]["land_size_acres"] == 5.0    # Merged new memory
+    # Assert that the returned Event contains the correct state delta to be merged by ADK
+    assert event.actions.state_delta["profile"]["location_name"] == "Salem"  # Retained old memory
+    assert event.actions.state_delta["profile"]["land_size_acres"] == 5.0    # Merged new memory
     
     # Assert that the Event emitted contains the unified downstream output
     assert event.output.profile.location_name == "Salem"
