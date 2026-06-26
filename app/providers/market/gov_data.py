@@ -5,14 +5,25 @@ import httpx
 
 from app.core.config import settings
 from app.core.constants import DATA_GOV_IN_URL
+from app.providers.cache import TtlCache
 from app.providers.interfaces import MarketProvider
 
 logger = logging.getLogger(__name__)
 
 
 class GovDataMarketProvider(MarketProvider):
+    def __init__(self) -> None:
+        # Cache for 1 hour
+        self._cache = TtlCache(ttl_seconds=3600)
+
     async def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
-        """Fetches wholesale mandi prices from data.gov.in AGMARKNET API."""
+        """Fetches wholesale mandi prices from data.gov.in AGMARKNET API, with caching."""
+        cache_key = (crop, state)
+        cached_data = self._cache.get(cache_key)
+        if cached_data is not None:
+            logger.info(f"Market Agent: Cache HIT for crop='{crop}', state='{state}'")
+            return cached_data
+
         if not settings.DATA_GOV_IN_API_KEY:
             logger.warning("fetch_prices called but DATA_GOV_IN_API_KEY is not set.")
             return []
@@ -38,7 +49,9 @@ class GovDataMarketProvider(MarketProvider):
                 )
                 response.raise_for_status()
                 data = response.json()
-                return data.get("records", [])
+                records = data.get("records", [])
+                self._cache.set(cache_key, records)
+                return records
         except Exception as e:
             logger.error(f"Market API error: {e}", exc_info=True)
             return []
