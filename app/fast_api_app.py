@@ -20,7 +20,7 @@ from google.cloud import logging as google_cloud_logging
 
 from app.app_utils.log_config import setup_logging
 from app.app_utils.telemetry import setup_telemetry
-from app.app_utils.typing import Feedback
+from app.app_utils.feedback import Feedback
 
 setup_telemetry()
 setup_logging()
