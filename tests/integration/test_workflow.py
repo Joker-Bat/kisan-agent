@@ -74,20 +74,3 @@ async def test_workflow_live_api():
     )
     assert state_dict["profile"]["location_name"].lower() == "salem"
 
-    # The final output should have weather data in it
-    assert (
-        "temperature" in response_text.lower()
-        or "weather" in response_text.lower()
-        or "salem" in response_text.lower()
-    )
-
-    # Verify memory contains the location
-    session = await runner.session_service.get_session(
-        session_id=session_id, app_name="app", user_id="test_user"
-    )
-    state_dict = (
-        session.state.to_dict()
-        if hasattr(session.state, "to_dict")
-        else dict(session.state)
-    )
-    assert state_dict["profile"]["location_name"].lower() == "salem"
