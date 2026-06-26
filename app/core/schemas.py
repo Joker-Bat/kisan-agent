@@ -33,7 +33,7 @@ class FarmerProfile(BaseModel):
     land_size_acres: Optional[float] = Field(default=None, description="The total land size owned or leased by the farmer, in acres.")
     income: Optional[float] = Field(default=None, description="The annual income of the farmer in INR.")
     tenancy_type: Optional[str] = Field(default=None, description="The type of land tenancy (e.g., 'owner', 'tenant', 'sharecropper').")
-    crop_intent: Optional[str] = Field(default=None, description="The specific crop the farmer is planning to grow or is inquiring about.")
+    crop_intent: List[str] = Field(default_factory=list, description="A list of individual crop names (e.g., ['Cotton', 'Sorghum'] instead of ['Cotton and Sorghum']) that the farmer is planning to grow or inquiring about.")
     disaster_flag: bool = Field(default=False, description="True if the farmer is reporting a crop loss or disaster scenario (e.g., flood, drought).")
     damage_date: Optional[str] = Field(default=None, description="The date the crop damage occurred, if applicable.")
 
@@ -45,6 +45,7 @@ class MarketOutput(BaseModel):
     crop: str = Field(description="The name of the crop for which the market price was retrieved.")
     state: str = Field(description="The state where the mandi (market) is located.")
     prices: List[dict] = Field(default_factory=list, description="A list of recent wholesale prices across various nearby mandis.")
+    summary: Optional[str] = Field(default=None, description="A summary of the market prices and recommendations on where the farmer should sell.")
 
 class CropOutput(BaseModel):
     recommended_crops: List[str] = Field(default_factory=list, description="A list of the top recommended crops suitable for the farmer's soil and weather.")

@@ -8,22 +8,23 @@ class GovDataMarketProvider(MarketProvider):
     def fetch_prices(self, crop: str, state: str) -> List[Dict[str, Any]]:
         """Fetches wholesale mandi prices from data.gov.in AGMARKNET API."""
         if not settings.DATA_GOV_IN_API_KEY:
-            # Fallback Mock Data
-            return [
-                {"state": state, "district": "Salem", "market": "Attur", "commodity": crop, "min_price": "1200", "max_price": "1500", "modal_price": "1350", "arrival_date": "Today"},
-                {"state": state, "district": "Coimbatore", "market": "Mettupalayam", "commodity": crop, "min_price": "1300", "max_price": "1600", "modal_price": "1450", "arrival_date": "Today"}
-            ]
+            return None
 
         params = {
             "api-key": settings.DATA_GOV_IN_API_KEY,
             "format": "json",
-            "filters[State]": state,
-            "filters[Commodity]": crop,
-            "limit": 10
+            "filters[state]": state,
+            "limit": 30
+        }
+        if crop:
+            params["filters[commodity]"] = crop
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
         
         try:
-            response = httpx.get(DATA_GOV_IN_URL, params=params, timeout=10.0)
+            response = httpx.get(DATA_GOV_IN_URL, params=params, headers=headers, timeout=10.0)
             response.raise_for_status()
             data = response.json()
             return data.get("records", [])
