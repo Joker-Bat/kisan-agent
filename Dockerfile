@@ -24,6 +24,11 @@ COPY ./app ./app
 
 RUN uv sync --frozen
 
+# Create a non-root user and adjust ownership of the code directory
+RUN groupadd -r appgroup && useradd -r -g appgroup -d /code appuser && chown -R appuser:appgroup /code
+
+USER appuser
+
 ARG COMMIT_SHA=""
 ENV COMMIT_SHA=${COMMIT_SHA}
 
