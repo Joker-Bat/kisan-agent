@@ -41,6 +41,14 @@ class FarmerProfile(BaseModel):
         default=None,
         description="The Indian state where the farm is located (e.g., 'Tamil Nadu').",
     )
+    district: str | None = Field(
+        default=None,
+        description="The district name resolved from the location or query, used for local market price filtering.",
+    )
+    market: str | None = Field(
+        default=None,
+        description="The specific market/mandi name resolved from the location or query.",
+    )
     soil_type: str | None = Field(
         default=None,
         description="The type of soil present on the farm (e.g., 'Red soil', 'Black soil').",

@@ -16,12 +16,18 @@ class GovDataMarketProvider(MarketProvider):
         # Cache for 1 hour
         self._cache = TtlCache(ttl_seconds=3600)
 
-    async def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
+    async def fetch_prices(
+        self,
+        crop: str,
+        state: str,
+        district: str | None = None,
+        market: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Fetches wholesale mandi prices from data.gov.in AGMARKNET API, with caching."""
-        cache_key = (crop, state)
+        cache_key = (crop, state, district, market)
         cached_data = self._cache.get(cache_key)
         if cached_data is not None:
-            logger.info(f"Market Agent: Cache HIT for crop='{crop}', state='{state}'")
+            logger.info(f"Market Agent: Cache HIT for crop='{crop}', state='{state}', district='{district}', market='{market}'")
             return cached_data
 
         if not settings.DATA_GOV_IN_API_KEY:
@@ -36,12 +42,18 @@ class GovDataMarketProvider(MarketProvider):
         }
         if crop:
             params["filters[commodity]"] = crop
+        if district:
+            params["filters[district]"] = district
+        if market:
+            params["filters[market]"] = market
 
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
-        logger.info(f"Fetching market prices from {DATA_GOV_IN_URL} for crop={crop}, state={state}")
+        logger.info(
+            f"Fetching market prices from {DATA_GOV_IN_URL} for crop={crop}, state={state}, district={district}, market={market}"
+        )
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(

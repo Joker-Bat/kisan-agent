@@ -79,7 +79,7 @@ async def test_market_node_multiple_crops(monkeypatch):
 
     mock_fetch = AsyncMock()
 
-    async def side_effect(crop, state):
+    async def side_effect(crop, state, district=None, market=None):
         if crop == "Cotton":
             return [
                 {
@@ -106,8 +106,12 @@ async def test_market_node_multiple_crops(monkeypatch):
     res = await market_node._func(ctx, state)
 
     assert mock_fetch.call_count == 2
-    mock_fetch.assert_any_call("Cotton", "Tamil Nadu")
-    mock_fetch.assert_any_call("Sorghum", "Tamil Nadu")
+    mock_fetch.assert_any_call(
+        crop="Cotton", state="Tamil Nadu", district=None, market=None
+    )
+    mock_fetch.assert_any_call(
+        crop="Sorghum", state="Tamil Nadu", district=None, market=None
+    )
     assert res.crop == "Cotton, Sorghum"
     assert len(res.prices) == 2
     assert "Cotton" in res.summary

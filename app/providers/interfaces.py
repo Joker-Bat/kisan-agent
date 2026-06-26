@@ -16,8 +16,14 @@ class WeatherProvider(Protocol):
 
 
 class MarketProvider(Protocol):
-    async def fetch_prices(self, crop: str, state: str) -> list[dict[str, Any]]:
-        """Fetch market prices for the given crop and state."""
+    async def fetch_prices(
+        self,
+        crop: str,
+        state: str,
+        district: str | None = None,
+        market: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch market prices for the given crop, state, and optional district or market."""
         ...
 
 

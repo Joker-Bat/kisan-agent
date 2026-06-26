@@ -64,6 +64,17 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     new_profile_data = new_state.profile.model_dump(exclude_none=True)
     merged_profile = {**current_profile, **new_profile_data}
 
+    # Resolve location name details (lat, lon, state, district)
+    location_name = merged_profile.get("location_name")
+    if location_name:
+        from app.tools.geocoding import geocode_location
+        geo_res = await geocode_location(location_name)
+        if geo_res:
+            merged_profile["latitude"] = merged_profile.get("latitude") or geo_res["latitude"]
+            merged_profile["longitude"] = merged_profile.get("longitude") or geo_res["longitude"]
+            merged_profile["state"] = merged_profile.get("state") or geo_res["state"]
+            merged_profile["district"] = merged_profile.get("district") or geo_res["district"]
+
     # Inherit active agents if none provided in current turn
     existing_active_agents = current_state_dict.get("active_agents", [])
     merged_active_agents = (

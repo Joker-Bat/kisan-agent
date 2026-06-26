@@ -82,10 +82,25 @@ async def market_node(ctx: Context, node_input: GraphState):
 
     all_prices = []
     for crop_name in crop_names:
-        logger.info(f"Market Agent: Fetching prices for {crop_name} in {profile.state}")
-        data = await active_market_provider.fetch_prices(crop_name, profile.state)
+        logger.info(
+            f"Market Agent: Fetching local prices for {crop_name} in {profile.state}, district={profile.district}, market={profile.market}"
+        )
+        data = await active_market_provider.fetch_prices(
+            crop=crop_name,
+            state=profile.state,
+            district=profile.district,
+            market=profile.market,
+        )
         if data:
             all_prices.extend(data)
+        elif profile.district or profile.market:
+            # Fall back to state-wide prices if local prices are missing
+            logger.info(
+                f"Market Agent: No local prices found for {crop_name} in district '{profile.district}'. Falling back to state-wide query."
+            )
+            state_data = await active_market_provider.fetch_prices(crop_name, profile.state)
+            if state_data:
+                all_prices.extend(state_data)
 
     if not all_prices:
         logger.info(f"Market Agent: No prices found for {crop_str} in {profile.state}. Fetching state suggestions.")
