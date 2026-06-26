@@ -39,7 +39,7 @@ async def test_orchestrator_extracts_and_routes():
         "market_info": None,
         "crop_info": None,
         "scheme_info": None,
-        "final_advisory": None
+        "final_advisory": "Vanakkam! I am Kisan Agent..."
     }
     
     # Run the logic
@@ -51,8 +51,10 @@ async def test_orchestrator_extracts_and_routes():
     # Assert that the returned Event contains the correct state delta to be merged by ADK
     assert event.actions.state_delta["profile"]["location_name"] == "Salem"  # Retained old memory
     assert event.actions.state_delta["profile"]["land_size_acres"] == 5.0    # Merged new memory
+    assert event.actions.state_delta["final_advisory"] == "Vanakkam! I am Kisan Agent..."
     
     # Assert that the Event emitted contains the unified downstream output
     assert event.output.profile.location_name == "Salem"
     assert event.output.profile.land_size_acres == 5.0
     assert "crop_agent" in event.output.active_agents
+    assert event.output.final_advisory == "Vanakkam! I am Kisan Agent..."

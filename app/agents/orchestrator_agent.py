@@ -55,12 +55,16 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
     existing_active_agents = current_state_dict.get("active_agents", [])
     merged_active_agents = new_state.active_agents if new_state.active_agents else existing_active_agents
     
+    # Determine the final advisory (prefer new LLM-generated greeting if present)
+    final_advisory = new_state.final_advisory if new_state.final_advisory else current_state_dict.get("final_advisory")
+
     # We construct the exact state delta to patch the global ADK memory
     state_delta = {
         "user_query": user_msg,
         "profile": merged_profile,
         "active_agents": merged_active_agents,
         "missing_info_questions": new_state.missing_info_questions,
+        "final_advisory": final_advisory,
     }
     
     # The output is the fully merged state passed downstream to the router.
@@ -73,7 +77,7 @@ async def orchestrator_logic(ctx: Context, node_input: Any):
         "market_info": current_state_dict.get("market_info"),
         "crop_info": current_state_dict.get("crop_info"),
         "scheme_info": current_state_dict.get("scheme_info"),
-        "final_advisory": current_state_dict.get("final_advisory"),
+        "final_advisory": final_advisory,
     }
     
     return Event(
