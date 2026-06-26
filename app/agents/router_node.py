@@ -15,7 +15,8 @@ def dynamic_router(node_input: GraphState):
         return Event(output=" ".join(node_input.missing_info_questions), route=ROUTE_DIRECT_RESPONSE)
         
     if not node_input.active_agents:
-        return Event(output="I am the Kisan Agent. How can I assist you with your farming needs today?", route=ROUTE_DIRECT_RESPONSE)
+        output = node_input.final_advisory or "I am the Kisan Agent. How can I assist you with your farming needs today?"
+        return Event(output=output, route=ROUTE_DIRECT_RESPONSE)
 
     # Return the exact same GraphState as output so child nodes get it
     # Route to the "specialists" branch which triggers the unconditional parallel fan-out

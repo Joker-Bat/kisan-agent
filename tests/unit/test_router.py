@@ -33,3 +33,16 @@ def test_router_returns_direct_response_when_no_active_agents():
     event = dynamic_router._func(state)
     
     assert event.actions.route == "direct_response"
+    assert event.output == "I am the Kisan Agent. How can I assist you with your farming needs today?"
+
+def test_router_returns_final_advisory_when_no_active_agents():
+    state = GraphState(
+        active_agents=[],
+        missing_info_questions=[],
+        final_advisory="Vanakkam! I am Kisan Agent..."
+    )
+    
+    event = dynamic_router._func(state)
+    
+    assert event.actions.route == "direct_response"
+    assert event.output == "Vanakkam! I am Kisan Agent..."
