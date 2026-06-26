@@ -11,7 +11,65 @@
       "eval_case_id": "weather_query",
       "prompt": {
         "role": "user",
-        "parts": [{"text": "What's the weather like in San Francisco?"}]
+        "parts": [{"text": "What's the weather like in Salem, Tamil Nadu?"}]
+      }
+    },
+    {
+      "eval_case_id": "tamil_greeting",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "வணக்கம், உங்களால் எனக்கு என்ன உதவி செய்ய முடியும்?"}]
+      }
+    },
+    {
+      "eval_case_id": "hindi_market_query",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "उत्तर प्रदेश में गेहूं का क्या भाव चल रहा है?"}]
+      }
+    },
+    {
+      "eval_case_id": "crop_recommendation_soil",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "I have black soil in Madurai. My NPK values are N=45, P=30, K=35, and pH is 6.5. What should I plant?"}]
+      }
+    },
+    {
+      "eval_case_id": "multi_turn_soil_then_weather",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {"author": "user", "content": {"role": "user", "parts": [{"text": "Hi, I have red soil in Coimbatore. My NPK values are N=60, P=40, K=40, and pH is 6.2."}]}},
+              {"author": "agent", "content": {"role": "model", "parts": [{"text": "Vanakkam! Based on your red soil in Coimbatore with N=60, P=40, K=40, pH=6.2, I recommend you plant Maize, Groundnut, or Cotton. Which of these interests you?"}]}},
+              {"author": "user", "content": {"role": "user", "parts": [{"text": "What's the weather like there for the next 5 days?"}]}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "scheme_disaster_query",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "Heavy rains flooded my farm yesterday in Salem. I have 2 acres of land and my crops are destroyed. Is there any government aid or scheme for me?"}]
+      }
+    },
+    {
+      "eval_case_id": "market_query_missing_state",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {"author": "user", "content": {"role": "user", "parts": [{"text": "What is the price of Cotton?"}]}},
+              {"author": "agent", "content": {"role": "model", "parts": [{"text": "I can certainly look up the wholesale mandi prices for Cotton. Could you please tell me which state you are selling in?"}]}},
+              {"author": "user", "content": {"role": "user", "parts": [{"text": "I'm in Tamil Nadu."}]}}
+            ]
+          }
+        ]
       }
     }
   ]
