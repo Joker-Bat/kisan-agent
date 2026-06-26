@@ -16,7 +16,7 @@ from app.agents.scheme_agent import scheme_node
 from app.core.constants import NODE_WEATHER, NODE_MARKET, NODE_CROP, NODE_SCHEME
 
 load_dotenv()
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 join_node = JoinNode(name="merge_specialists")
 
