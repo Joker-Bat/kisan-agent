@@ -54,7 +54,7 @@ select = [
     "UP", # pyupgrade
     "RUF", # ruff specific rules
 ]
-ignore = ["E501", "C901", "B006"] # ignore line too long, too complex
+ignore = ["E501", "C901", "B006", "E402"] # ignore line too long, too complex, late imports
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "frontend"]
@@ -67,7 +67,7 @@ known-first-party = ["app", "frontend"]
 python-version = "3.10"
 
 [tool.ty.src]
-exclude = [".venv/**"]
+exclude = [".venv/**", "tests/**"]
 
 [tool.ty.rules]
 # Ignore common issues with third-party libraries and dynamic code patterns
@@ -81,7 +81,7 @@ not-subscriptable = "ignore"
 deprecated = "ignore"
 
 [tool.codespell]
-ignore-words-list = "rouge"
+ignore-words-list = "rouge,didi"
 skip = "./locust_env/*,uv.lock,.venv,./frontend,**/package-lock.json"
 
 

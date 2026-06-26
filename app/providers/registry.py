@@ -1,7 +1,7 @@
-from app.providers.interfaces import WeatherProvider, MarketProvider, SchemeProvider
-from app.providers.weather.open_meteo import OpenMeteoProvider
+from app.providers.interfaces import MarketProvider, SchemeProvider, WeatherProvider
 from app.providers.market.gov_data import GovDataMarketProvider
 from app.providers.schemes.local_json import LocalJsonSchemeProvider
+from app.providers.weather.open_meteo import OpenMeteoProvider
 
 # Instantiate active providers
 active_weather_provider: WeatherProvider = OpenMeteoProvider()

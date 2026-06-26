@@ -1,11 +1,11 @@
 from google.adk.agents import LlmAgent
-from google.adk.models import Gemini
-from google.genai import types
-from google.adk.workflow import node
 from google.adk.agents.context import Context
+from google.adk.models import Gemini
+from google.adk.workflow import node
+from google.genai import types
 
-from app.core.schemas import SchemeOutput, GraphState
 from app.core.config import settings
+from app.core.schemas import GraphState, SchemeOutput
 from app.providers.registry import active_scheme_provider
 
 SCHEME_AGENT_INSTRUCTION = """
@@ -18,31 +18,35 @@ Provide clear, step-by-step application instructions for the matching schemes. D
 
 scheme_evaluator = LlmAgent(
     name="scheme_evaluator",
-    model=Gemini(model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3)),
+    model=Gemini(
+        model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3)
+    ),
     instruction=SCHEME_AGENT_INSTRUCTION,
-    output_schema=SchemeOutput
+    output_schema=SchemeOutput,
 )
 
 from app.core.constants import NODE_SCHEME
+
 
 @node(rerun_on_resume=True)
 async def scheme_node(ctx: Context, node_input: GraphState):
     if NODE_SCHEME not in node_input.active_agents:
         return "SKIPPED"
-        
+
     profile = node_input.profile
     schemes_db = active_scheme_provider.get_schemes(settings.REGION)
-    
+
     # Convert Pydantic models back to dict for the prompt
     schemes_json = [scheme.model_dump(exclude_none=True) for scheme in schemes_db]
-    
+
     import json
+
     prompt = f"Farmer Profile: {profile.model_dump_json(exclude_none=True)}\nSchemes DB: {json.dumps(schemes_json, indent=2)}"
     try:
         return await ctx.run_node(scheme_evaluator, node_input=prompt)
     except Exception as e:
         print(f"Scheme LLM Error: {e}")
         return SchemeOutput(
-            eligible_schemes=["N/A"],
-            instructions="I'm having trouble analyzing your eligibility right now due to a technical issue. Please try again later."
+            applicable_schemes=[],
+            instructions="I'm having trouble analyzing your eligibility right now due to a technical issue. Please try again later.",
         )

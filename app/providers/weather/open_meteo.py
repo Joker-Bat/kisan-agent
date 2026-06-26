@@ -1,20 +1,55 @@
+import datetime
+from typing import Any
+
 import httpx
-from typing import Dict, Any
+
 from app.core.constants import OPEN_METEO_URL
 from app.providers.interfaces import WeatherProvider
 
+
 class OpenMeteoProvider(WeatherProvider):
-    def fetch_forecast(self, lat: float, lon: float) -> Dict[str, Any]:
-        """Fetches a 14-day weather forecast from Open-Meteo for given coordinates."""
-        params = {
-            "latitude": lat,
-            "longitude": lon,
-            "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min",
-            "forecast_days": 14,
-            "timezone": "auto"
-        }
+    def fetch_forecast(
+        self,
+        lat: float,
+        lon: float,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict[str, Any]:
+        """Fetches weather forecast or historical data from Open-Meteo for given coordinates and date range."""
+
+        # Decide which URL to use and parameters
+        if start_date and end_date:
+            try:
+                s_date = datetime.date.fromisoformat(start_date)
+                today = datetime.date.today()
+                # If start date is older than 90 days ago, use historical archive API
+                if (today - s_date).days > 90:
+                    url = "https://archive-api.open-meteo.com/v1/archive"
+                else:
+                    url = OPEN_METEO_URL
+            except Exception:
+                url = OPEN_METEO_URL
+
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min",
+                "timezone": "auto",
+                "start_date": start_date,
+                "end_date": end_date,
+            }
+        else:
+            url = OPEN_METEO_URL
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min",
+                "forecast_days": 14,
+                "timezone": "auto",
+            }
+
         try:
-            response = httpx.get(OPEN_METEO_URL, params=params, timeout=10.0)
+            response = httpx.get(url, params=params, timeout=10.0)
             response.raise_for_status()
             return response.json()
         except Exception as e:
