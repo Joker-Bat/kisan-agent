@@ -14,11 +14,13 @@
 
 import contextlib
 import os
+import time
+from collections import defaultdict
 from collections.abc import AsyncIterator
 
 import google.auth
 from a2a.server.tasks import InMemoryTaskStore
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, responses
 from google.adk.cli.fast_api import get_fast_api_app
 from google.adk.runners import Runner
 from google.cloud import logging as google_cloud_logging
@@ -80,6 +82,50 @@ app: FastAPI = get_fast_api_app(
 )
 app.title = "kisan-agent"
 app.description = "API for interacting with the Agent kisan-agent"
+
+# Rate limiting configuration (configurable via environment variables)
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "10"))
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+
+# Simple in-memory sliding window rate limiter
+# Structure: client_ip -> list of timestamps of recent requests
+request_history = defaultdict(list)
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    # Only rate limit API calls to prevent blocking static files or metadata
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/a2a/"):
+        # Get client IP (resolving proxy header for Cloud Run)
+        client_ip = request.headers.get("x-forwarded-for")
+        if client_ip:
+            # Take the first IP if multiple are passed in the chain
+            client_ip = client_ip.split(",")[0].strip()
+        else:
+            client_ip = request.client.host if request.client else "unknown"
+
+        now = time.time()
+        # Filter out timestamps older than the rate limit window
+        request_history[client_ip] = [
+            t for t in request_history[client_ip] if now - t < RATE_LIMIT_WINDOW
+        ]
+
+        if len(request_history[client_ip]) >= RATE_LIMIT_REQUESTS:
+            return responses.JSONResponse(
+                status_code=429,
+                content={
+                    "detail": "Too many requests. Please try again later.",
+                    "requests_limit": RATE_LIMIT_REQUESTS,
+                    "window_seconds": RATE_LIMIT_WINDOW,
+                },
+            )
+
+        # Record this request
+        request_history[client_ip].append(now)
+
+    response = await call_next(request)
+    return response
+
 
 # Proxy routes so the Vertex AI Console Playground (reasoning_engine SDK) can
 # talk to this agent alongside the native adk_api routes.

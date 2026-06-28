@@ -62,11 +62,39 @@ This prototype integrates the following data sources:
 
 * **Asynchronous Execution**: Network calls to external APIs are parallelized using `httpx.AsyncClient` within the graph nodes to prevent bottlenecks.
 * **In-Memory Caching**: Implements a simple Time-To-Live (`TtlCache`) layer (24h for geocoding, 1h for mandi prices, 30m for weather) to respect API rate limits and minimize redundant network requests.
+* **IP-Based Rate Limiting**: A lightweight FastAPI middleware enforces a per-IP sliding-window rate limit (default: **10 requests per minute**) on all `/api/` and `/a2a/` endpoints. This protects the Gemini/Vertex AI backend from quota exhaustion by malicious users or bots, without requiring an external WAF or load balancer.
 * **Telemetry Tracing**: Uses context variables to bind a unique `session_id` to each invocation, facilitating tracing in Cloud Logging.
 * **Structured Output Validation**: Enforces type safety across nodes using Pydantic schemas (e.g., `WeatherOutput`, `MarketOutput`, `CropOutput`, `SchemeOutput`).
 * **Friendly Console Logs**: Uses a custom ADK `FriendlyLoggingPlugin` to print colored, emoji-enriched logs showing step-by-step tool calls, agent runs, and state transitions in the terminal.
 
 ---
+
+## 🛡️ Rate Limiting & Security
+
+The deployed Cloud Run service is protected by a multi-layered security strategy:
+
+| Layer | Mechanism | Default |
+|-------|-----------|---------|
+| **IP Rate Limiting** | FastAPI middleware with sliding window | 10 req/min per IP |
+| **Instance Cap** | Cloud Run `--max-instances` | 2 containers max |
+| **Zero-Idle Scaling** | Cloud Run scales to 0 when idle | $0.00 base cost |
+| **Billing Budget** | GCP billing alert threshold | ₹1,000/month |
+
+### Configuring Rate Limits
+
+The rate limiter is configurable via environment variables at deploy time (no code changes needed):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RATE_LIMIT_REQUESTS` | Maximum requests allowed per IP per window | `10` |
+| `RATE_LIMIT_WINDOW` | Sliding window duration in seconds | `60` |
+
+To adjust at deploy time:
+```bash
+gcloud run services update kisan-agent \
+  --update-env-vars "RATE_LIMIT_REQUESTS=20,RATE_LIMIT_WINDOW=60" \
+  --region us-central1
+```
 
 ## ⚠️ Prototype Limitations & Real-World Considerations
 
