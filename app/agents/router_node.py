@@ -1,7 +1,7 @@
 from google.adk.events.event import Event, EventActions
 from google.adk.workflow import node
 
-from app.core.constants import ROUTE_DIRECT_RESPONSE
+from app.core.constants import ROUTE_DIRECT_RESPONSE, ROUTE_SPECIALISTS
 from app.core.schemas import GraphState
 
 
@@ -26,5 +26,5 @@ def dynamic_router(node_input: GraphState):
         return Event(output=output, actions=EventActions(route=ROUTE_DIRECT_RESPONSE))
 
     # Return the exact same GraphState as output so child nodes get it
-    # Route to the "specialists" branch which triggers the unconditional parallel fan-out
-    return Event(output=node_input, actions=EventActions(route="specialists"))
+    # Route to the specialists branch which triggers the unconditional parallel fan-out
+    return Event(output=node_input, actions=EventActions(route=ROUTE_SPECIALISTS))

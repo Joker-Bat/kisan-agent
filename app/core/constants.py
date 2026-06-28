@@ -13,6 +13,7 @@ NODE_SCHEME = "scheme_agent"
 NODE_SYNTHESIS = "synthesis_agent"
 
 # Workflow Edges
+ROUTE_SPECIALISTS = "specialists"
 ROUTE_DIRECT_RESPONSE = "__default__"
 
 # Prompts

@@ -1,5 +1,5 @@
 from app.agents.router_node import dynamic_router
-from app.core.constants import ROUTE_DIRECT_RESPONSE
+from app.core.constants import ROUTE_DIRECT_RESPONSE, ROUTE_SPECIALISTS
 from app.core.schemas import GraphState
 
 
@@ -10,7 +10,7 @@ def test_router_forwards_to_specialists():
 
     event = dynamic_router._func(state)
 
-    assert event.actions.route == "specialists"
+    assert event.actions.route == ROUTE_SPECIALISTS
     assert event.output == state
 
 
