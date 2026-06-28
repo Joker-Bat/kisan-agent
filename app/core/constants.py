@@ -14,7 +14,7 @@ NODE_SYNTHESIS = "synthesis_agent"
 
 # Workflow Edges
 ROUTE_SPECIALISTS = "specialists"
-ROUTE_DIRECT_RESPONSE = "__default__"
+ROUTE_DIRECT_RESPONSE = "__DEFAULT__"
 
 # Prompts
 ORCHESTRATOR_INSTRUCTION = f"""

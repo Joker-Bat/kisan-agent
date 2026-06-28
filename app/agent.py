@@ -20,7 +20,7 @@ load_dotenv()
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
-from app.core.constants import ROUTE_SPECIALISTS
+from app.core.constants import ROUTE_SPECIALISTS, ROUTE_DIRECT_RESPONSE
 
 join_node = JoinNode(name="merge_specialists")
 
@@ -40,7 +40,7 @@ edges = [
         dynamic_router,
         {
             ROUTE_SPECIALISTS: specialists,
-            "__default__": direct_response_node,
+            ROUTE_DIRECT_RESPONSE: direct_response_node,
         },
     ),
     # Fan-In: JoinNode merges all outputs from the fanned-out specialist branches
@@ -49,6 +49,8 @@ edges = [
     (join_node, synthesis_node),
 ]
 
+from app.app_utils.friendly_logging import FriendlyLoggingPlugin
+
 root_agent = Workflow(
     name="kisan_workflow",
     edges=edges,
@@ -56,4 +58,4 @@ root_agent = Workflow(
     state_schema=GraphState,
 )
 
-app = App(root_agent=root_agent, name="app")
+app = App(root_agent=root_agent, name="app", plugins=[FriendlyLoggingPlugin()])
