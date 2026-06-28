@@ -83,19 +83,29 @@ app: FastAPI = get_fast_api_app(
 app.title = "kisan-agent"
 app.description = "API for interacting with the Agent kisan-agent"
 
-# Rate limiting configuration (configurable via environment variables)
-RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "10"))
-RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+# Rate limiting defaults (read from env vars on every request for runtime
+# configurability — update via `gcloud run services update --update-env-vars`
+# without rebuilding the container image).
+RATE_LIMIT_REQUESTS_DEFAULT = 10
+RATE_LIMIT_WINDOW_DEFAULT = 60
 
 # Simple in-memory sliding window rate limiter
 # Structure: client_ip -> list of timestamps of recent requests
-request_history = defaultdict(list)
+request_history: dict[str, list[float]] = defaultdict(list)
 
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     # Only rate limit API calls to prevent blocking static files or metadata
     if request.url.path.startswith("/api/") or request.url.path.startswith("/a2a/"):
+        # Read limits on every request so env var changes take effect immediately
+        max_requests = int(
+            os.getenv("RATE_LIMIT_REQUESTS", str(RATE_LIMIT_REQUESTS_DEFAULT))
+        )
+        window_seconds = int(
+            os.getenv("RATE_LIMIT_WINDOW", str(RATE_LIMIT_WINDOW_DEFAULT))
+        )
+
         # Get client IP (resolving proxy header for Cloud Run)
         client_ip = request.headers.get("x-forwarded-for")
         if client_ip:
@@ -107,16 +117,16 @@ async def rate_limit_middleware(request: Request, call_next):
         now = time.time()
         # Filter out timestamps older than the rate limit window
         request_history[client_ip] = [
-            t for t in request_history[client_ip] if now - t < RATE_LIMIT_WINDOW
+            t for t in request_history[client_ip] if now - t < window_seconds
         ]
 
-        if len(request_history[client_ip]) >= RATE_LIMIT_REQUESTS:
+        if len(request_history[client_ip]) >= max_requests:
             return responses.JSONResponse(
                 status_code=429,
                 content={
                     "detail": "Too many requests. Please try again later.",
-                    "requests_limit": RATE_LIMIT_REQUESTS,
-                    "window_seconds": RATE_LIMIT_WINDOW,
+                    "requests_limit": max_requests,
+                    "window_seconds": window_seconds,
                 },
             )
 
