@@ -25,7 +25,7 @@ Explain to the farmer why these crops were chosen, referencing their compatibili
 crop_recommender = LlmAgent(
     name="crop_recommender",
     model=Gemini(
-        model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3)
+        model="gemini-3.5-flash", retry_options=types.HttpRetryOptions(attempts=3)
     ),
     instruction=CROP_AGENT_INSTRUCTION,
     output_schema=CropOutput,

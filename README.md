@@ -21,8 +21,8 @@ graph TD
     subgraph Specialists [Specialized Sub-Agents]
         FanOut --> Weather[Weather Agent <br><i>Gemini 3.1 Flash Lite + Open-Meteo</i>]
         FanOut --> Market[Market Agent <br><i>Gemini 3.1 Flash Lite + Data.gov.in</i>]
-        FanOut --> Crop[Crop Agronomist Agent <br><i>Gemini 2.5 Pro + Local CSV Classifier</i>]
-        FanOut --> Scheme[Government Scheme Agent <br><i>Gemini 2.5 Pro + Local JSON DB</i>]
+        FanOut --> Crop[Crop Agronomist Agent <br><i>Gemini 3.5 Flash + Local CSV Classifier</i>]
+        FanOut --> Scheme[Government Scheme Agent <br><i>Gemini 3.5 Flash + Local JSON DB</i>]
     end
     
     Weather --> Join[Join Node <br><i>Parallel Fan-In</i>]

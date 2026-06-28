@@ -26,7 +26,7 @@ Provide clear, step-by-step application instructions for the matching schemes. D
 scheme_evaluator = LlmAgent(
     name="scheme_evaluator",
     model=Gemini(
-        model="gemini-2.5-pro", retry_options=types.HttpRetryOptions(attempts=3)
+        model="gemini-3.5-flash", retry_options=types.HttpRetryOptions(attempts=3)
     ),
     instruction=SCHEME_AGENT_INSTRUCTION,
     output_schema=SchemeOutput,
