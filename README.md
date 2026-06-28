@@ -1,14 +1,12 @@
-# 🌾 Kisan Agent: Multi-Agent Agriculture Advisory System
+# 🌾 Kisan Agent: Multi-Agent Agriculture Advisory Prototype
 
-**Kisan Agent** is a production-ready, multi-agent decision support system powered by **Google ADK (Agent Development Kit) 2.0** and the **Gemini 3.5 / 2.5 model family**. It is designed to assist Indian farmers by providing real-time, localized, and actionable recommendations in English, Hindi, and Tamil.
-
-The system integrates live weather forecasting, real-time market (mandi) commodity pricing, data-grounded soil crop recommendation, and government aid eligibility evaluation into a single, cohesive advisory report.
+**Kisan Agent** is a capstone project demonstrating a multi-agent decision support prototype, built using **Google ADK (Agent Development Kit) 2.0** and **Gemini 3.5 / 3.1 model family**. Developed as part of the Google AI Agents Capstone course, it showcases how a stateful graph-based workflow can aggregate public meteorology, commodity pricing, and local crop data to compile structured bilingual advisory reports in Tamil, English, and Hindi.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture & Workflow
 
-Kisan Agent utilizes a **dynamic router and self-gating parallel fan-out pattern** inside an asynchronous graph workflow.
+The prototype utilizes a static graph workflow in ADK 2.0 to coordinate multiple specialized nodes. A self-gating parallel pattern is used to run active agents without blocking the graph.
 
 ```mermaid
 graph TD
@@ -16,7 +14,7 @@ graph TD
     Orch --> Router{Dynamic Router}
     
     Router -- Direct Response / Missing Info --> DirectNode[Direct Response Node]
-    Router -- specialists Route --> FanOut[Parallel Fan-Out]
+    Router -- ROUTE_SPECIALISTS Route --> FanOut[Parallel Fan-Out]
     
     subgraph Specialists [Specialized Sub-Agents]
         FanOut --> Weather[Weather Agent <br><i>Gemini 3.1 Flash Lite + Open-Meteo</i>]
@@ -36,112 +34,64 @@ graph TD
     DirectNode --> END
 ```
 
-### Flow Breakdown
-1. **Master Orchestrator**: Processes natural language input, updates the farmer's profile, imputes missing soil metrics, and requests downstream specialists.
-2. **Dynamic Router**: Routes directly to the user if more questions are needed (lazy parameter collection), or triggers the parallel fan-out.
-3. **Specialized Agents**:
-   - **Weather Agent**: Geocodes locations and queries the Open-Meteo API for 14-day forecasts or 30-day history.
-   - **Market Agent**: Calls the data.gov.in API to retrieve wholesale mandi rates (Rupees/quintal and Rupees/kg) and offers fallback suggestions.
-   - **Crop Agronomist**: Leverages a local CSV classifier (centroid matching using Z-score distance from the Kaggle crop recommendation dataset) to match soil N-P-K-pH values.
-   - **Government Scheme Agent**: Matches land size, income, and disaster reports against local regional scheme databases.
-4. **Synthesis Agent**: Aggregates specialists' JSON findings, translates them entirely into the farmer's preferred language, and provides proactive advisories and contextual follow-up questions.
+### Component Flow
+1. **Master Orchestrator**: Extracts user profile information (location, N-P-K soil metrics, land size) and saves it to the session state. It determines which specialized sub-agents are needed for the query.
+2. **Dynamic Router**: Routes directly to the user if more questions are needed (such as asking for the location), or triggers the parallel fan-out.
+3. **Specialized Agents (Self-Gating)**:
+   - **Weather Agent**: Geocodes locations and queries the Open-Meteo API for forecasts.
+   - **Market Agent**: Calls the data.gov.in API to retrieve wholesale commodity prices.
+   - **Crop Agronomist**: Evaluates N-P-K soil metrics against a local crop centroid model.
+   - **Government Scheme Agent**: Matches profile attributes (land size, income, region) against local scheme databases.
+4. **Synthesis Agent**: Aggregates the results and translates the advice into the farmer's preferred language.
 
 ---
 
-## ⚡ Engineering & Performance Highlights
+## 🔌 Data Sources & Attributions
 
-* **Asynchronous Non-blocking Execution**: Network calls are parallelized using `httpx.AsyncClient` inside the graph's specialist nodes, ensuring parallel execution and fast response times.
-* **Session-Scoped Tracing & Structured Logging**: Utilizes `contextvars` to propagate unique request session IDs across all async threads and agent nodes, making tracing and debugging in Cloud Logging trivial.
-* **Fail-Safe TTL API Caching**: Features a robust, lightweight caching layer:
-  - **Geocoding**: 24-hour cache TTL
-  - **Mandi Prices**: 1-hour cache TTL
-  - **Weather Forecast**: 30-minute cache TTL
-* **Strict Type Safety**: Every agent node enforces Pydantic structured output contracts (e.g., `WeatherOutput`, `MarketOutput`, `CropOutput`, `SchemeOutput`).
-* **Multi-Lingual Integration**: Dynamically detects and outputs responses in the farmer's preferred language (English, Hindi, Tamil) with natural agricultural phrasing.
+This prototype integrates the following data sources:
+1. **Weather Forecasts**: Asynchronous fetches from the [Open-Meteo API](https://open-meteo.com/).
+   - *Attribution*: Weather data by [Open-Meteo.com](https://open-meteo.com/) (Licensed under CC BY 4.0).
+2. **Commodity Prices**: Wholesale prices retrieved from the Indian government's open data portal ([Data.gov.in Mandi API](https://data.gov.in/)).
+   - *Attribution*: Data sourced from Ministry of Agriculture and Farmers Welfare, India, under the National Data Sharing and Accessibility Policy (NDSAP).
+3. **Soil Crop Suitability**: Recommendations are mapped mathematically using a local centroid model derived from the open [Kaggle Crop Recommendation Dataset](https://www.kaggle.com/datasets/atharvaingle/crop-recommendation-dataset).
+4. **Government Schemes**: Scheme eligibility logic is matched against a local mock JSON database of Indian agricultural subsidies (e.g., PM-KISAN).
 
 ---
 
-## 📂 Project Structure
+## ⚙️ Key Implementation Features
 
-```
-kisan-agent/
-├── app/
-│   ├── agents/            # Specialized Agent Nodes (Orchestrator, Crop, Weather, etc.)
-│   ├── app_utils/         # Session-scoped Logging, Telemetry, and Feedback Schemas
-│   ├── core/              # Config, Constants, and Pydantic Schemas
-│   ├── data/              # Kaggle CSV crop recommendations & Local JSON schemes
-│   ├── providers/         # Adapter classes (Open-Meteo, Data.gov.in, Local caches)
-│   ├── tools/             # Nominatim Geocoding Tool
-│   ├── agent.py           # Main ADK Workflow / Graph definition
-│   └── fast_api_app.py    # FastAPI web application wrapper
-├── tests/
-│   ├── unit/              # Isolated mocked unit tests (100% passes)
-│   ├── integration/       # E2E runner tests
-│   └── eval/              # Multi-turn/multi-lingual evaluation datasets
-├── Dockerfile             # Hardened non-root production Docker image
-└── pyproject.toml         # Python packaging & dependencies using uv
-```
+* **Asynchronous Execution**: Network calls to external APIs are parallelized using `httpx.AsyncClient` within the graph nodes to prevent bottlenecks.
+* **In-Memory Caching**: Implements a simple Time-To-Live (`TtlCache`) layer (24h for geocoding, 1h for mandi prices, 30m for weather) to respect API rate limits and minimize redundant network requests.
+* **Telemetry Tracing**: Uses context variables to bind a unique `session_id` to each invocation, facilitating tracing in Cloud Logging.
+* **Structured Output Validation**: Enforces type safety across nodes using Pydantic schemas (e.g., `WeatherOutput`, `MarketOutput`, `CropOutput`, `SchemeOutput`).
+* **Friendly Console Logs**: Uses a custom ADK `FriendlyLoggingPlugin` to print colored, emoji-enriched logs showing step-by-step tool calls, agent runs, and state transitions in the terminal.
+
+---
+
+## ⚠️ Prototype Limitations & Real-World Considerations
+
+As a capstone project prototype, this agent is not intended for commercial production use without addressing the following constraints:
+* **Public API Rate Limits**: The Nominatim geocoding and Open-Meteo APIs run on public, free tiers. Commercial scaling would require paid enterprise endpoint configurations.
+* **Data Completeness**: Data.gov.in mandi uploads are dependent on local market reporting and frequently contain delays or missing entries. A real-world application would need more reliable proprietary commodity feeds.
+* **Agronomical Rigor**: The crop matching is based on Euclidean centroid distance from a static Kaggle dataset. Professional agricultural advice requires integration with certified soil testing laboratories and dynamic regional agronomy models.
+* **Security & Auth**: The API calls and container are structured for prototype demonstration. Production deployment would require network segregation, secret management hardening, and authenticated API gateways.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- **Python 3.12+**
-- **uv**: Fast Python package manager ([Install](https://docs.astral.sh/uv/getting-started/installation/))
-- **google-agents-cli**: Install with `uv tool install google-agents-cli`
-
-### Installation
-Clone the repository and install all packages:
-```bash
-agents-cli install
-```
-
-Configure your environment variables:
-```bash
-cp .env.example .env
-# Open .env and add your GEMINI_API_KEY and DATA_GOV_IN_API_KEY (optional)
-```
-
-### Local Testing & Interactive Playground
-Start the interactive developer interface to chat with the agent and inspect workflow traces:
-```bash
-agents-cli playground
-```
-
----
-
-## 🧪 Testing & Evaluation
-
-### Unit Tests
-Run unit tests to verify mocked providers, agents, and parsing utilities:
-```bash
-uv run pytest tests/unit
-```
-
-### Quality Evaluations
-Generate execution traces and grade them using LLM-as-a-judge against the custom 8-case evaluation dataset:
-```bash
-# Generate execution traces
-agents-cli eval generate
-
-# Grade the results against general quality metrics
-agents-cli eval grade
-```
-
----
-
-## 🐳 Deployment
-
-The project is fully prepared for containerized deployment on Cloud Run or GKE.
-
-1. Set your active Google Cloud project:
+### Local Setup
+1. Install Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+2. Install dependencies:
    ```bash
-   gcloud config set project <YOUR-PROJECT-ID>
+   agents-cli install
    ```
-2. Build and deploy the agent using the CLI:
+3. Copy `.env.example` to `.env` and set your `GEMINI_API_KEY`.
+4. Launch the local chat interface:
    ```bash
-   agents-cli deploy
+   agents-cli playground
    ```
 
-*Note: The `Dockerfile` compiles the virtual environment and executes the service using a non-privileged `appuser` (UID/GID 1000/1000) for strict container hardening.*
+### Running Tests
+* Run unit tests: `uv run pytest tests/unit`
+* Run integration tests: `uv run pytest tests/integration`
