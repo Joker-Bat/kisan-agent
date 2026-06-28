@@ -11,7 +11,7 @@ from google.genai import types
 
 from app.app_utils.log_config import bind_session_id
 from app.core.constants import ORCHESTRATOR_INSTRUCTION, ROUTE_DIRECT_RESPONSE
-from app.core.schemas import GraphState
+from app.core.schemas import GraphState, OrchestratorOutput
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ orchestrator_llm = LlmAgent(
         model="gemini-3.5-flash", retry_options=types.HttpRetryOptions(attempts=3)
     ),
     instruction=ORCHESTRATOR_INSTRUCTION,
-    output_schema=GraphState,
+    output_schema=OrchestratorOutput,
 )
 
 

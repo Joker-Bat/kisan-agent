@@ -150,6 +150,24 @@ class SchemeOutput(BaseModel):
     )
 
 
+class OrchestratorOutput(BaseModel):
+    profile: FarmerProfile = Field(
+        description="The updated profile of the farmer based on the user's latest query."
+    )
+    active_agents: list[str] = Field(
+        default_factory=list,
+        description="A list of agent node names to activate for this turn (e.g., 'weather_agent', 'market_agent', 'crop_agent', 'scheme_agent').",
+    )
+    missing_info_questions: list[str] = Field(
+        default_factory=list,
+        description="A list of follow-up questions to ask the user if required parameters are missing.",
+    )
+    final_advisory: str | None = Field(
+        default=None,
+        description="A direct response or greeting to the user if no specialists are activated.",
+    )
+
+
 class GraphState(BaseModel):
     model_config = {"extra": "allow"}
 
