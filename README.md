@@ -1,5 +1,7 @@
 # 🌾 Kisan Agent: Multi-Agent Agriculture Advisory Prototype
 
+![Kisan Agent Cover](assets/kisan_agent_cover.jpg)
+
 **Kisan Agent** is a capstone project demonstrating a multi-agent decision support prototype, built using **Google ADK (Agent Development Kit) 2.0** and **Gemini 3.5 / 3.1 model family**. Developed as part of the Google AI Agents Capstone course, it showcases how a stateful graph-based workflow can aggregate public meteorology, commodity pricing, and local crop data to compile structured bilingual advisory reports in Tamil, English, and Hindi.
 
 ---
