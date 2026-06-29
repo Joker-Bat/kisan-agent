@@ -23,14 +23,14 @@ set -euo pipefail
 PROJECT_ID="kisan-agent-500311"
 REGION="us-central1"
 SERVICE_NAME="kisan-agent"
-MAX_INSTANCES=2
+MAX_INSTANCES=5
 MIN_INSTANCES=0
 
 # Secrets mapping: ENV_VAR_NAME=SECRET_NAME
 SECRETS="DATA_GOV_IN_API_KEY=DATA_GOV_IN_API_KEY"
 
 # Environment variables
-ENV_VARS="GOOGLE_CLOUD_LOCATION=global"
+ENV_VARS="GOOGLE_CLOUD_LOCATION=global,RATE_LIMIT_REQUESTS=60,RATE_LIMIT_WINDOW=60"
 
 # ---------------------------------------------------------------------------
 # Deploy
